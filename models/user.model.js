@@ -28,10 +28,6 @@ const userSchema = new mongoose.Schema({
         enum: ['viewer','user','admin'],
         default: 'viewer'
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
     lastLogin: {
         type: Date,
         default: null
