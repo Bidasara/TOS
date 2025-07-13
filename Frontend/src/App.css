@@ -1,0 +1,134 @@
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c7c7c7;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Custom Checkbox Styling */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  background-color: #fff;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #4f46e5;
+  border-color: #4f46e5;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "✓";
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.dark input[type="checkbox"] {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+.dark input[type="checkbox"]:checked {
+  background-color: #6366f1;
+  border-color: #6366f1;
+}
+
+/* Add some nice transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Add responsive font sizes */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Add focus styles for accessibility */
+button:focus, input:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.6);
+  outline-offset: 2px;
+}
+
+/* Optional: Add a custom font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.cyberpunk-bg {
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #ff00cc 100%);
+}
+.neon-text {
+  text-shadow: 0 0 8px #00fff7, 0 0 16px #ff00cc;
+}
+.shadow-cyber {
+  box-shadow: 0 0 8px #ff00cc, 0 0 16px #00fff7;
+}
+.drop-shadow-cyber {
+  filter: drop-shadow(0 0 8px #00fff7) drop-shadow(0 0 16px #ff00cc);
+}
+.cyberpunk-textarea {
+  caret-color: #00fff7;
+}
+.cyberpunk-scrollbar::-webkit-scrollbar { width: 8px; background: #0ff; }
+.cyberpunk-scrollbar::-webkit-scrollbar-thumb { background: #ff00cc; border-radius: 8px; box-shadow: 0 0 8px #ff00cc, 0 0 16px #00fff7; }
+.cyberpunk-scrollbar { scrollbar-width: thin; scrollbar-color: #ff00cc #0ff; }
