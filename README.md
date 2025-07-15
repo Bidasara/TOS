@@ -1,2 +1,2 @@
 # NERDY
-New Era of Revision, DSA, and You
+New Era of Revising DSA for You
