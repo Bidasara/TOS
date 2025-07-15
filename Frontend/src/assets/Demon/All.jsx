@@ -1,2 +1,3 @@
-import Demon from './Demon.png';
-export {Demon};
+import idleDemon from './DemonIdle.png';
+import attackDemon from './Demon.png'
+export {idleDemon,attackDemon};

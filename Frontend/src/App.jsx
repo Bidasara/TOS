@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/home.jsx'
 import Login from './pages/login.jsx'
 import Register from './pages/register.jsx'
+import ToRevise from './pages/toRevise.jsx'
 import Layout from './Layout.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import Dashboard from './pages/dashboard.jsx';
@@ -17,6 +18,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/user/dashboard/:username" element={<Dashboard />} />
               <Route path='/' element={<Home />} />
+              <Route path='/revise' element={<ToRevise />} />
             </Route>
             <Route path='/login' element={<Login />} />
             <Route path='/register' element={<Register />} />

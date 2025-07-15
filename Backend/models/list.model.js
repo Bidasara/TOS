@@ -22,6 +22,10 @@ const listSchema = new mongoose.Schema({
                 type: Boolean,
                 default: false
             },
+            toRevise: {
+                type: Date,
+                default: null
+            },
             revised: {
                 type: Boolean,
                 default: false

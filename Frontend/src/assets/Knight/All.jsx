@@ -1,13 +1,6 @@
-import knightIdle from './Idle2.png';
-import knightAttack1 from './Special1.png';
-import knightAttack2 from './Kick.png';
-import knightWalk from './Walk.png';
-import knightRun from './Run.png';
-
+import idleKnight from './Idle2.png';
+import attackKnight from './Special1.png';
 export {
-    knightIdle,
-    knightAttack1,
-    knightAttack2,
-    knightWalk,
-    knightRun
+    idleKnight,
+    attackKnight,
 };

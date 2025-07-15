@@ -22,7 +22,7 @@ const Options = (props) => {
     const [inputVal, setInputVal] = useState("")
 
     return (
-        <div className={`w-1/3 my-2 mr-2 rounded-xl p-5 flex flex-col justify-between shadow-lg transition-all duration-300 ${theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-white border border-gray-100 dark:bg-gray-800 dark:border-gray-700'}`}>
+        <div className={`w-1/4 my-2 mr-2 rounded-xl p-5 flex flex-col justify-between shadow-lg transition-all duration-300 ${theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-white border border-gray-100 dark:bg-gray-800 dark:border-gray-700'}`}>
 
             {/* Recommended Lists */}
             <h2 className={`text-lg font-bold mb-4 ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-gray-800 dark:text-white'}`}>Recommended Lists</h2> 

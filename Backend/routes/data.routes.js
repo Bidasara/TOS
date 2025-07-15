@@ -17,5 +17,6 @@ router.delete('/deleteProblem', dataController.deleteProblem);
 router.patch('/markRevised', dataController.markRevisedProblem);
 router.get('/getNotes', dataController.getNotesByUserListCategoryProblem);
 router.patch('/submit', dataController.markSolvedWithNotes);
+router.get('/reviseList', dataController.getReviseListByUserId);
 
 export default router; 

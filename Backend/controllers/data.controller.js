@@ -226,6 +226,9 @@ const markSolvedWithNotes = asyncHandler(async (req, res) => {
 
     problem.solved = true;
     problem.notes = notes;
+    const currentDate = new Date();
+    currentDate.setDate(currentDate.getDate() + 4);
+    problem.toRevise = currentDate;
     await list.save();
 
     return res.status(200).json(new ApiResponse(200, `Problem ${probId} marked as solved with notes`));
@@ -233,13 +236,41 @@ const markSolvedWithNotes = asyncHandler(async (req, res) => {
 
 const getRecommendedLists = asyncHandler(async (req, res) => {
     try {
-        const recomLists = await List.find({ byAdmin: true })
-            .populate('categories.problems.problemId', 'num title difficulty link');
         return res.status(200).json(new ApiResponse(200, recomLists, "Retrieved recommended lists successfully"));
     } catch (err) {
         console.error('Error fetching recommended lists:', err);
         throw new ApiError(500, 'Failed to retrieve recommended lists');
     }
+});
+
+const getReviseListByUserId = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    if (!userId) throw new ApiError(400, 'User not logged in');
+    const lists = await List.find({ owner: userId }).populate('categories.problems.problemId', 'num title difficulty link');
+    if (!lists || lists.length === 0) throw new ApiError(400, 'No Data found');
+
+    // Group problems to revise by list
+    const result = lists.map(list => {
+        const problems = [];
+        list.categories.forEach(cat => {
+            cat.problems.forEach(prob => {
+                if (prob && prob.solved && !prob.revised && prob.toRevise != null) {
+                    problems.push({
+                        ...prob.toObject(),
+                        categoryId: cat._id,
+                        categoryTitle: cat.title
+                    });
+                }
+            });
+        });
+        return {
+            listId: list._id,
+            listTitle: list.title,
+            problems
+        };
+    }).filter(list => list.problems.length > 0); // Only include lists with problems to revise
+
+    return res.status(200).json(new ApiResponse(200, result, 'Problems to be revised sent successfully'));
 });
 
 const addRecomListForUserId = asyncHandler(async (req, res) => {
@@ -314,5 +345,6 @@ export default {
     addRecomListForUserId,
     deleteCategory,
     deleteList,
-    deleteProblem
+    deleteProblem,
+    getReviseListByUserId
 }

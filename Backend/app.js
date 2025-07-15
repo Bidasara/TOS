@@ -37,6 +37,9 @@ app.use('/api/v1/data', dataRoutes);
 
 import animationRoutes from './routes/animation.routes.js';
 app.use('/api/v1/animation', animationRoutes);
+
+
+
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({

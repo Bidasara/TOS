@@ -9,7 +9,7 @@ const animationSchema = mongoose.Schema({
     link: {
         type: String,
         required: true,
-        trim: true
+        trim: true 
     },
 })
 
