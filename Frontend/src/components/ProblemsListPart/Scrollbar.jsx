@@ -4,7 +4,7 @@ import { useTheme } from '../../contexts/ThemeContext'
 
 const Scrollbar = () => {
     //Hooks
-    const {data, currentList, setCurrentList,setElevatedCategory,setOpenCategory} = useProblemContext()
+    const {data, currentList, setCurrentList,setElevatedCategory,setOpenCategory, deleteList} = useProblemContext()
     const [center, setCenter] = useState(0)
     const { theme } = useTheme()
 
@@ -44,6 +44,29 @@ const Scrollbar = () => {
                     <div className={`relative z-10 px-4 py-1 rounded-full font-medium shadow-sm
                         ${theme === 'cyberpunk' ? 'bg-black border border-cyan-400 text-cyan-400 neon-text' : 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white'}`}>
                         {currentList?.title || "Select a list"}
+                        {currentList?._id && (
+                            <button
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!window.confirm('Are you sure you want to delete this list? This action cannot be undone.')) return;
+                                    await deleteList(currentList._id);
+                                    // After deletion, select the next available list or clear selection
+                                    const idx = data.lists.findIndex(list => list._id === currentList._id);
+                                    const nextList = data.lists.length > 1
+                                        ? data.lists[(idx + 1) % data.lists.length]
+                                        : null;
+                                    setCurrentList(nextList || {});
+                                    setElevatedCategory(null);
+                                    setOpenCategory(null);
+                                }}
+                                className={`ml-2 p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors border border-transparent hover:border-red-400`}
+                                title="Delete this list"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                 </div>
 

@@ -8,7 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const Options = (props) => {
     const {accessToken} = useAuth();
-    const {setCurrentList,addEmptyList} = useProblemContext();
+    const {setCurrentList,addEmptyList,totalProblems,totalSolved,totalRevised} = useProblemContext();
     const { theme } = useTheme();
     const handleAddList = async (title) =>{
         if(!accessToken)
@@ -45,11 +45,11 @@ const Options = (props) => {
                 <div className="grid grid-cols-2 gap-3">
                     <div className={`p-4 rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] ${theme === 'cyberpunk' ? 'bg-black border border-pink-500 neon-text' : 'bg-indigo-50 dark:bg-indigo-900/30'}`}>
                         <div className={`text-xs mb-1 ${theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-indigo-600 dark:text-indigo-400'}`}>Problems Solved</div>
-                        <div className={`text-2xl font-bold ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-indigo-700 dark:text-indigo-300'}`}>Empty for now</div>
+                        <div className={`text-2xl font-bold ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-indigo-700 dark:text-indigo-300'}`}>{totalSolved}/{totalProblems}</div>
                     </div>
                     <div className={`p-4 rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] ${theme === 'cyberpunk' ? 'bg-black border border-cyan-400 neon-text' : 'bg-green-50 dark:bg-green-900/30'}`}>
-                        <div className={`text-xs mb-1 ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-green-600 dark:text-green-400'}`}>Current Streak</div>
-                        <div className={`text-2xl font-bold ${theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-green-700 dark:text-green-300'}`}>0 days</div>
+                        <div className={`text-xs mb-1 ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-green-600 dark:text-green-400'}`}>Problems Revised</div>
+                        <div className={`text-2xl font-bold ${theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-green-700 dark:text-green-300'}`}>{totalRevised}/{totalSolved}</div>
                     </div>
                 </div>
             </div>

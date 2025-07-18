@@ -12,7 +12,9 @@ export const getAllListsByUserId = asyncHandler(async (req, res) => {
     if (!lists || lists.length === 0) {
         throw new ApiError(404, 'No lists found for this user');
     }
-    return res.status(200).json(new ApiResponse(200, { lists: lists }, 'Lists retrieved successfully'));
+    const totsProbs = await Problem.find();
+    console.log("totalProblems:",totsProbs.length);
+    return res.status(200).json(new ApiResponse(200, { lists: lists, totalProblems: totsProbs.length }, 'Lists retrieved successfully'));
 })
 
 export const addListForUserId = asyncHandler(async (req, res) => {
@@ -32,13 +34,16 @@ export const addListForUserId = asyncHandler(async (req, res) => {
 
 export const deleteList = asyncHandler(async (req,res)=> {
     const userId = req.user.id;
+    console.log('1');
     if(!userId) throw new ApiError(400, 'User not logged in');
 
     const list = await List.findById(req.body.listId);
-    if(!list.byAdmin && list.owner != req.body.listId)
+    console.log('2');
+    if(!list.byAdmin && list.owner.toString() !== userId)
     throw new ApiError(404,'Unauthorized to delete this list');
     
     await List.deleteOne({_id:req.body.listId});
+    console.log('3');
     return res.status(200).json(new ApiResponse(200,'List deleted successfully'));
 })
 
@@ -103,9 +108,9 @@ export const addProblemForCategory = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     if (!userId) throw new ApiError(400, 'User not logged in');
 
-    const { listId, titleCategory, probNum } = req.body;
+    const { listId, catId, probNum } = req.body;
     if (!listId) throw new ApiError(400, 'Invalid List');
-    if (!titleCategory) throw new ApiError(400, 'Invalid Category');
+    if (!catId) throw new ApiError(400, 'Invalid Category');
     if (!probNum) throw new ApiError(400, 'Invalid Problem number');
 
     const prob = await Problem.findOne({ num: probNum });
@@ -118,7 +123,7 @@ export const addProblemForCategory = asyncHandler(async (req, res) => {
     const list = await List.findOneAndUpdate(
         {
             _id: listId,
-            "categories.title": titleCategory
+            "categories._id": catId
         },
         {
             $push: {
@@ -142,22 +147,27 @@ export const deleteProblem = asyncHandler( async (req,res)=> {
     const userId = req.user.id;
     if(!userId) throw new ApiError(400, 'User not logged in');
     const {listId, categoryId, problemId} = req.body;
+    console.log('2',listId);
     if(!listId) throw new ApiError(400, 'Invalid List');
     if(!categoryId) throw new ApiError(400, 'Invalid Category');
     if(!problemId) throw new ApiError(400, 'Invalid Problem id');
+    console.log('3');
 
     const list = await List.findById(listId);
+    console.log('4');
     if(!list) throw new ApiError(404, 'List not found');
     if(!list.byAdmin && list.owner != userId) throw new ApiError(404, 'Unauthorized to delete problem');
 
     const category = list.categories.id(categoryId);
+    console.log('5');
     if(!category) throw new ApiError(404, 'Category not found');
 
-    const problem = category.problems.id(problemId);
-    if(!problem) throw new ApiError(404, 'Problem not found');
+    category.problems = category.problems.filter(prob=> prob._id != problemId)
+    console.log('6');
 
-    problem.remove(); 
+    console.log('7');
     await list.save();
+    console.log('8');
     return res.status(200).json(new ApiResponse(200, 'Problem deleted successfully'));
 })
 
@@ -208,7 +218,7 @@ export const getNotesByUserListCategoryProblem = asyncHandler(async (req, res) =
 
 const markSolvedWithNotes = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const { listId, catId, probId, notes } = req.body;
+    const { listId, catId, probId, notes, addToRevise } = req.body;
 
     if (!userId) throw new ApiError(400, 'User not logged in');
     if (!listId) throw new ApiError(400, 'Invalid List');
@@ -226,9 +236,18 @@ const markSolvedWithNotes = asyncHandler(async (req, res) => {
 
     problem.solved = true;
     problem.notes = notes;
-    const currentDate = new Date();
-    currentDate.setDate(currentDate.getDate() + 4);
-    problem.toRevise = currentDate;
+    console.log('addToRevise:',addToRevise)
+    const shouldRevise = addToRevise === true || addToRevise === 'true';
+    console.log('shouldRevise:',shouldRevise)
+    if (shouldRevise) {
+        const currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() + 4);
+        problem.toRevise = currentDate;
+        problem.revised = false;
+    } else {
+        problem.toRevise = null;
+        problem.revised = true;
+    }
     await list.save();
 
     return res.status(200).json(new ApiResponse(200, `Problem ${probId} marked as solved with notes`));
@@ -236,6 +255,8 @@ const markSolvedWithNotes = asyncHandler(async (req, res) => {
 
 const getRecommendedLists = asyncHandler(async (req, res) => {
     try {
+        const recomLists = await List.find({ byAdmin: true })
+            .populate('categories.problems.problemId', 'num title difficulty link');
         return res.status(200).json(new ApiResponse(200, recomLists, "Retrieved recommended lists successfully"));
     } catch (err) {
         console.error('Error fetching recommended lists:', err);

@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-
-// A reusable sprite animation component
+import { useState, useEffect } from 'react';// A reusable sprite animation component
 const SpriteAnimation = ({
   spriteSheet,       // Path to sprite sheet OR array of individual sprite paths
   frameWidth,        // Width of each frame (if using sprite sheet)
@@ -21,11 +19,13 @@ const SpriteAnimation = ({
   flipped = false, // Whether to flip the sprite horizontally
 }) => {
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
-
+  const {isPlaying,setIsPlaying} = useTheme();
   // Use external control if provided
   const playing = externalIsPlaying !== undefined ? externalIsPlaying : isPlaying;
 
+  useEffect(()=>{
+    setCurrentFrame(0);
+  },[spriteSheet,frameCount,direction,row])
   // Debug: log prop changes
   useEffect(() => {
     if (!playing) return;
@@ -97,14 +97,15 @@ const SpriteAnimation = ({
   );
 };
 
-import { idleShinobi, attackShinobi} from '../../assets/Shinobi/All.jsx';
+import { idleShinobi, attackShinobi } from '../../assets/Shinobi/All.jsx';
 import { idleMage, attackMage } from '../../assets/Lightning_Image/All.jsx';
 import { idleDemon, attackDemon } from '../../assets/Demon/All.jsx';
 import { idleKnight, attackKnight } from '../../assets/Knight/All.jsx';
+import { useTheme } from '../../contexts/ThemeContext.jsx';
 
 // Usage example component
 const SpriteDemo = () => {
-  const [currentAnimation, setCurrentAnimation] = useState('attack_1'); // Default animation
+  const {triggerAttack,loop,setLoop,currentAnimation,setCurrentAnimation,isPlaying,setIsPlaying,setAnimationUp,currCharacter,setCurrCharacter} = useTheme();
 
   // Example sprite data - you would replace these with your actual sprites
   const animations = {
@@ -172,7 +173,7 @@ const SpriteDemo = () => {
       },
       Knight: {
         translateX: '20%',
-        scale: 3,
+        scale: 4,
         idle: {
           spriteSheet: idleKnight,
           frameWidth: 80,
@@ -185,7 +186,7 @@ const SpriteDemo = () => {
           spriteSheet: attackKnight,
           frameWidth: 80,
           frameHeight: 95,
-          frameCount: 15,
+          frameCount: 16,
           direction: 'vertical',
           fps: 10
         },
@@ -193,21 +194,24 @@ const SpriteDemo = () => {
     }
   };
 
-  const [currCharacter, setCurrCharacter] = useState('Knight');
-
+  const backToIdle = () => {
+    setCurrentAnimation('idle');
+    setLoop(true);
+    setIsPlaying(true);
+    setAnimationUp(false);
+    return;
+  }
   // Get the current animation data from the animations object
-  const { spriteSheet, frameWidth, frameHeight, frameCount, fps, loop = true, row = 0, direction } = animations.characters[currCharacter][currentAnimation] || {};
+  const { spriteSheet, frameWidth, frameHeight, frameCount, fps, row = 0, direction } = animations.characters[currCharacter][currentAnimation] || {};
 
   // Get character properties with defaults
   const { scale = 1, translateX = '0', translateY = '0', total_frames = frameCount, flipped } = animations.characters[currCharacter] || {};
 
   const allCharacters = ['Shinobi', 'Mage', 'Demon', 'Knight'];
 
-  console.log('Current character:', currCharacter, 'Current animation:', currentAnimation, 'SpriteSheet:', spriteSheet);
-
   return (
     <div className='flex flex-col justify-between h-full gap-4 py-3 pl-2'>
-     
+
       <div className='relative h-full'>
         {spriteSheet && (
           <SpriteAnimation
@@ -219,6 +223,7 @@ const SpriteDemo = () => {
             loop={loop}
             scale={scale}
             className=""
+            onComplete={backToIdle}
             translateX={translateX}
             translateY={translateY}
             row={row}

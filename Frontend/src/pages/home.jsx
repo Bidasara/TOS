@@ -1,10 +1,11 @@
-import Navbar from '../components/Navbar'
 import Animation from '../components/Animation'
 import Dolist from '../components/Dolist'
 import Options from '../components/Options'
 import { ProblemProvider, useProblemContext } from '../contexts/ProblemContext'
 import { useTheme } from '../contexts/ThemeContext'
 import NoteModal from '../components/common/Notes.jsx'
+import Modal from '../components/common/Modal.jsx'
+import Input from '../components/common/Input.jsx'
 
 function Home() {
   return (
@@ -16,18 +17,40 @@ function Home() {
 
 function HomeContent() {
   const { theme, toggleTheme } = useTheme();
-  const { noteModalOpen, setNoteModalOpen, noteModalContent } = useProblemContext();
+  const { 
+    noteModalOpen, setNoteModalOpen, noteModalContent ,modalTitle,modalOpen,onModalClose,
+    inputLabel,inputId,inputType,inputPlaceHolder,inputText,onChange,modalExtra,addCategory,func,addProblem
+  } = useProblemContext();
+  let currFunc = addCategory;
+  if(func==='problem')
+    currFunc = addProblem;
   
   return (
     <div className={`flex flex-col flex-1 transition-colors duration-300 min-h-0 h-[calc(100vh-64px)] 
       ${theme === 'light' ? 'bg-gray-100' : theme === 'dark' ? 'bg-gray-900' : 'bg-black cyberpunk-bg'}`}>
       <div className='flex flex-1 p-4 gap-4 min-h-0'>
         <Animation/>
-        <NoteModal
-          isOpen={noteModalOpen}
-          onClose={() => setNoteModalOpen(false)}
-          {...noteModalContent}
+        <NoteModal isOpen={noteModalOpen} onClose={() => setNoteModalOpen(false)} {...noteModalContent}         
+          addToRevise={noteModalContent.addToRevise}
         />
+        <Modal
+          isOpen={modalOpen}
+          onClose={onModalClose}
+          title={modalTitle}
+          onSubmit={currFunc}
+          extra ={modalExtra}
+        >
+          <Input
+            label={inputLabel}
+            id={inputId}
+            type={inputType}
+            placeholder={inputPlaceHolder}
+            value={inputText}
+            onChange={onChange}
+            onKeyDown={e => { if (e.key === 'Enter') currFunc}}
+            extra = {modalExtra}
+          />
+        </Modal> {/* Common Modal and Input */}
         <Dolist/>
         <Options/>
       </div>
@@ -38,7 +61,7 @@ function HomeContent() {
         onClick={toggleTheme}
       >
         {theme === 'light' ? '🌙' : theme === 'dark' ? '☀️' : <span className="text-pink-400">✦</span>}
-      </button>
+      </button> {/* Theme Toggle */}
     </div>
   )
 }

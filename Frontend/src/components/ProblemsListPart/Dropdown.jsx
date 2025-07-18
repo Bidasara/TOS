@@ -1,33 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
-import CategoryScroll from './CategoryScroll.jsx';
-import ProblemsScroll from './ProblemsScroll.jsx';
 import { useProblemContext } from '../../contexts/ProblemContext.jsx';
-import { useTheme } from '../../contexts/ThemeContext';
+import Scroll from '../common/Scroll.jsx';
+import Category from './Category.jsx';
 
-const Dropdown = (props) => {
-    const { currentList} = useProblemContext();
-    const { theme } = useTheme();
-    // Hooks
-    const [problemScroll, setProblemScroll] = useState(false);
-    const containerRef = useRef(null);
-    useEffect(() => {
-      setProblemScroll(false)
-    }, [currentList?._id])
-    
-    // Update openCategory when currentList changes
+const Dropdown = () => {
+    const { 
+        currentList, data,setModalOpen,setFunc,setModalTitle,
+        setInputText,setInputLabel,setInputId,setInputType,setInputPlaceHolder,setModalExtra,openCategory,setOpenCategory
+    } = useProblemContext();
 
+    const handleAdd = () =>{
+        setModalTitle("Add Category");
+        // setInputText("")
+        setFunc("category");
+        setInputLabel("Category Title");
+        setInputId("Category");
+        setInputPlaceHolder("name of your category")
+        setInputType("text")
+        setModalExtra(currentList._id);
+        setModalOpen(true);
+    }
     return (
-        <div ref={containerRef} className={`w-full h-full overflow-y-auto overflow-x-hidden scroll-container rounded-lg transition-all duration-300 ${theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border border-cyan-400' : ''}`}>
-            {!problemScroll && 
-                <CategoryScroll
-                    key={currentList?._id}
-                    containerRef={containerRef}  
-                    setProblemScroll={setProblemScroll}
-                />}
-            {problemScroll && <ProblemsScroll 
-                setProblemScroll={setProblemScroll}
-            />}
-        </div>
+        <>
+            <Scroll
+                items={data?.lists.find(list => list?._id === currentList?._id)?.categories}
+                renderItem={Category}
+                height={"h-2/7"}
+                openCategory = {openCategory}
+                setOpenCategory={setOpenCategory}
+            />
+            <button onClick={handleAdd} className='w-full h-2/12 rounded-xl text-black bg-amber-300'>
+                Add New Category
+            </button>
+        </>
     );
 };
 

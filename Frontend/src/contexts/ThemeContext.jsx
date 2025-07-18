@@ -4,6 +4,21 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState('light');
+  const [currentAnimation, setCurrentAnimation] = useState('idle')
+  const [loop, setLoop] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [animationUp, setAnimationUp] = useState(false);
+  const [currCharacter, setCurrCharacter] = useState('Knight');
+
+  const [currBreakAnimation, setCurrBreakAnimation] = useState('fire')
+  const [isBreakPlaying, setIsBreakPlaying] = useState(true);
+  const [breakAnimationUp, setBreakAnimationUp] = useState(false);
+
+  const triggerAttack = () => {
+    setCurrentAnimation('attack_1');
+    setLoop(false);
+    return;
+  }
 
   // Initialize theme on mount
   useEffect(() => {
@@ -21,7 +36,7 @@ export const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, currentAnimation,setCurrentAnimation,loop,setLoop,triggerAttack,isPlaying,setIsPlaying,setAnimationUp,animationUp,currCharacter,setCurrCharacter,currBreakAnimation,setCurrBreakAnimation,isBreakPlaying,setIsBreakPlaying,breakAnimationUp,setBreakAnimationUp }}>
       {children}
     </ThemeContext.Provider>
   );

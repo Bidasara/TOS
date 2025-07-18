@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect ,useCallback} from 'react';
 import { useProblemContext } from '../../contexts/ProblemContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import Checkbox from '../common/Checkbox';
 
-const Problem = ({ problem, category, list, elevatedProblem }) => {
-    const { updateProblemStatus, setNoteModalOpen, setNoteModalContent, updateProblemRevisedStatus } = useProblemContext();
+const Problem = ({ item:problem,elevate:elevatedProblem }) => {
+    const { updateProblemStatus, setNoteModalOpen, setNoteModalContent, updateProblemRevisedStatus, deleteProblem,openCategory,currentList, setElevatedProblem } = useProblemContext();
     const { theme } = useTheme();
     const [checked, setChecked] = useState(problem.solved === true);
     const [showNotes, setShowNotes] = useState(false);
@@ -19,19 +19,30 @@ const Problem = ({ problem, category, list, elevatedProblem }) => {
 
     //Functions
     const handleChange = (e, listId, categoryId, problemId, initialText) => {
-        if (checked)
-            return;
+        if (checked) return;
         const isChecked = e.target.checked;
-        setNoteModalContent({ problemId, initialText, listId, categoryId });
+        // Ask if user wants to add to revision list
+        const addToRevise = window.confirm("Do you want to add this problem to your revision list for spaced repetition?");
+        setNoteModalContent({ problemId, initialText, listId, categoryId, addToRevise });
         setNoteModalOpen(true);
     };
 
-    const handleRevisedToggle = (boolValue) => {
-        if (boolValue)
-            return;
-        setRevised(true);
-        updateProblemRevisedStatus(list._id, category.title, problem._id);
-    };
+    const handleDelete = useCallback((listId, categoryId,problemId ,event) => {
+            // Prevent the click from bubbling up to the category toggle
+            event.stopPropagation();
+            
+            if (window.confirm('Are you sure you want to delete this problem? This action cannot be undone.')) {
+                deleteProblem(listId, categoryId,problemId)
+                    .then(() => {
+                        console.log(`Problem ${problemId}, in category ${categoryId}, in list ${listId} deleted successfully`);
+                    })
+                    .catch(err => {
+                        console.error(`Error deleting category ${categoryId}:`, err);
+                        // You could add a toast notification here
+                        alert(`Failed to delete category: ${err.message || 'Unknown error'}`);
+                    });
+            }
+        }, [deleteProblem]);
 
     //Maps
     const getDifficultyStyles = (difficulty) => {
@@ -62,7 +73,7 @@ const Problem = ({ problem, category, list, elevatedProblem }) => {
 
     return (
         <div
-            className={`group mb-2 transition-all duration-300 h-16
+            className={`group mb-2 transition-all duration-300 h-full mx-auto
             ${problem._id != elevatedProblem
                     ? (theme === 'cyberpunk' ? 'pointer-events-none opacity-40 blur-[0.5px] bg-black bg-opacity-60 neon-text' : 'pointer-events-none opacity-40 blur-[0.5px] bg-gray-100 dark:bg-gray-800/50')
                     : 'opacity-100 blur-0'}
@@ -79,7 +90,7 @@ const Problem = ({ problem, category, list, elevatedProblem }) => {
                 <Checkbox
                     id={`problem-${problem._id}`}
                     checked={checked}
-                    onChange={(e) => handleChange(e,list._id, category._id, problem._id, problem.notes)}
+                    onChange={(e) => handleChange(e, currentList._id, openCategory, problem._id, problem.notes)}
                 />
                 <div className="min-w-0 flex-1">
                     <div className={`text-sm font-medium truncate ${checked
@@ -96,7 +107,6 @@ const Problem = ({ problem, category, list, elevatedProblem }) => {
             </div>
             <div className="flex items-center gap-2">
                 <button
-                    onClick={()=>handleRevisedToggle(problem.revised)}
                     className={`text-xs px-2 py-1 rounded transition-colors border ${problem.revised ? (theme === 'cyberpunk' ? 'bg-pink-700 text-pink-200 border-pink-400 neon-text' : 'bg-blue-200 text-blue-800 border-blue-400 dark:bg-blue-900/40 dark:text-blue-200') : (theme === 'cyberpunk' ? 'bg-black text-cyan-400 border-cyan-400 neon-text' : 'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700/40 dark:text-gray-300')}`}
                     title="Toggle Revised"
                 >
@@ -104,8 +114,9 @@ const Problem = ({ problem, category, list, elevatedProblem }) => {
                 </button>
                 <button
                     onClick={() => {
-                        setNoteModalContent({ problemId: problem._id, initialText: problem.notes, listId: list._id, categoryId: category._id });
+                        setNoteModalContent({ problemId: problem._id, initialText: problem.notes, listId: currentList._id, categoryId: openCategory });
                         setNoteModalOpen(true);
+                        setElevatedProblem && setElevatedProblem(problem._id);
                     }}
                     className={`p-1.5 rounded-full transition-colors ${theme === 'cyberpunk' ? 'text-pink-400 hover:bg-pink-900/30 neon-text' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-500 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30'}`}
                     title="View/Edit Notes"
@@ -114,6 +125,9 @@ const Problem = ({ problem, category, list, elevatedProblem }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
                     </svg>
                 </button>
+                <span onClick={(event) => handleDelete(currentList._id, openCategory,problem._id ,event)} className="material-symbols-outlined hover:cursor-pointer">
+                    delete
+                </span>
             </div>
         </div>
     );

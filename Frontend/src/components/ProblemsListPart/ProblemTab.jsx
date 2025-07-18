@@ -19,11 +19,6 @@ const ProblemTab = ({ problemTab, setProblemTab, category, setOpenCategory, open
             setInputVal("");
             setProblemTab(false);
             setOpenCategory(openCategory);
-            // If it's the first problem, set it as elevated
-            // if (isFirstProblem) {
-            //     const newProblemId = `prob-${Date.now()}`;
-            //     setElevated(newProblemId);
-            // }
         } else {
             alert("Please enter a valid problem title.");
         }
@@ -31,10 +26,6 @@ const ProblemTab = ({ problemTab, setProblemTab, category, setOpenCategory, open
 
     useEffect(() => {
       setElevated(data.lists.find(list=>list._id===currentList._id).categories.find(cat=>cat._id===category._id).problems?.[category.problems.length-1]?._id)
-    
-      return () => {
-        
-      }
     }, [data])
     
     return (

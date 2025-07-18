@@ -3,16 +3,16 @@ import ReactDOM from 'react-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useProblemContext } from '../../contexts/ProblemContext';
 
-const NoteModal = ({ isOpen, onClose, problemId, initialText = '', listId, categoryId }) => {
+const NoteModal = ({ isOpen, onClose }) => {
     const ref = useRef(null);
     const { theme } = useTheme();
-    const {updateProblemStatus} = useProblemContext();
+    const {updateProblemStatus,noteModalContent} = useProblemContext();
 
     useEffect(() => {
         if (isOpen && ref.current) {
-            ref.current.innerText = initialText || '-';
+            ref.current.innerText = noteModalContent.initialText || '-';
         }
-    }, [isOpen, initialText]);
+    }, [isOpen, noteModalContent.initialText]);
 
     if (!isOpen) return null;
 
@@ -46,7 +46,9 @@ const NoteModal = ({ isOpen, onClose, problemId, initialText = '', listId, categ
 
     const handleSubmit = () => {
         if (ref.current) {
-            updateProblemStatus(listId,categoryId, problemId,ref.current.innerText);
+            const {listId, categoryId, problemId, initialText, addToRevise} = noteModalContent;
+            console.log("addToRevise:",addToRevise)
+            updateProblemStatus(listId, categoryId, problemId, ref.current.innerText, addToRevise);
             onClose();
         }
     };

@@ -6,7 +6,8 @@ const Modal = ({
   onSubmit, 
   title, 
   children, 
-  size = "md" 
+  size = "md",
+  extra
 }) => {
   const modalRef = useRef();
   
@@ -79,7 +80,7 @@ const Modal = ({
                      hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors
                      active:bg-indigo-800 active:transform active:scale-95
                      dark:bg-indigo-700 dark:hover:bg-indigo-600"
-            onClick={onSubmit}
+            onClick={()=>onSubmit(extra)}
           >
             Add
           </button>

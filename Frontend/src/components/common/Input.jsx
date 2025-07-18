@@ -10,6 +10,7 @@ const Input = ({
   onKeyDown,
   autoFocus = false,
   fullWidth = false,
+  extra
 }) => {
   return (
     <div className={`mb-4 ${fullWidth ? 'w-full' : ''}`}>
@@ -31,7 +32,7 @@ const Input = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          onKeyDown={onKeyDown}
+          onKeyDown={()=>onKeyDown(extra)}
           autoFocus={autoFocus}
         />
       </div>

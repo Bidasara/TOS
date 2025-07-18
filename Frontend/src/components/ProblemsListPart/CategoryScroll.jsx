@@ -1,44 +1,45 @@
-import React, { useRef, useEffect, useCallback, useMemo } from 'react'
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useProblemContext } from '../../contexts/ProblemContext.jsx';
 
 const CategoryScroll = ({ containerRef, setProblemScroll }) => {
-    const { currentList, data, elevatedCategory, setElevatedCategory, openCategory, setOpenCategory,deleteCategory } = useProblemContext();
+    const { currentList, data, elevatedCategory, setElevatedCategory, openCategory, setOpenCategory, deleteCategory } = useProblemContext();
     const { theme } = useTheme();
-    const categoryRefs = useRef({});
+    const categoryRefs = useRef({}); // Ref for individual category elements for Intersection Observer
+
     const toggleCategory = useCallback((category) => {
         setOpenCategory(prev => (prev?._id === category._id) ? null : category);
         setProblemScroll(prev => !prev);
     }, [setOpenCategory, setProblemScroll]);
+
+    // This function should be attached to onWheel, not onScroll
 
     const categories = useMemo(() => {
         return data?.lists.find(list => list?._id === currentList?._id)?.categories || [];
     }, [data, currentList?._id]);
 
     const handleDelete = useCallback((listId, categoryId, event) => {
-        // Prevent the click from bubbling up to the category toggle
-        event.stopPropagation();
-        
+        event.stopPropagation(); // Prevent the click from bubbling up to toggleCategory
+        if (!window.confirm('Are you sure you want to delete this category? This action cannot be undone.')) return;
         deleteCategory(listId, categoryId)
             .then(() => {
                 console.log(`Category ${categoryId} deleted successfully`);
             })
             .catch(err => {
                 console.error(`Error deleting category ${categoryId}:`, err);
-                // You could add a toast notification here
                 alert(`Failed to delete category: ${err.message || 'Unknown error'}`);
             });
     }, [deleteCategory]);
 
     useEffect(() => {
         if (!containerRef.current) {
-            console.warn('Container ref is not set');
+            console.warn('Container ref is not set for IntersectionObserver root.');
             return;
         }
 
         const options = {
-            root: containerRef.current,
-            rootMargin: '-50% 0px -50% 0px',
+            root: containerRef.current, // Assuming containerRef is the actual scrollable root for IO
+            rootMargin: '-50% 0px -50% 0px', // Centers the "active" area
             threshold: 0
         };
 
@@ -46,6 +47,7 @@ const CategoryScroll = ({ containerRef, setProblemScroll }) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const categoryid = entry.target.dataset.categoryId;
+                    // Only update if it's a new elevated category to prevent unnecessary re-renders
                     setElevatedCategory(previd => (previd === categoryid) ? previd : categoryid);
                 }
             });
@@ -59,12 +61,16 @@ const CategoryScroll = ({ containerRef, setProblemScroll }) => {
             }
         });
 
+        // Cleanup function for useEffect
         return () => {
             observer.disconnect();
         };
-    }, [containerRef, categories, setElevatedCategory]);
+    }, [containerRef, categories, setElevatedCategory]); // Dependencies for useEffect
+
     return (
-        <div className={`flex gap-3 flex-col items-center justify-center rounded-lg transition-all duration-300 ${theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border border-pink-500' : ''}`}>
+        <div
+            className={`flex gap-3 flex-col items-center justify-center rounded-lg transition-all duration-300 ${theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border border-pink-500' : ''}`}
+        >
             <div className="h-[20vh]"></div>
             {/* Code for when currentList.categories is undefined or empty */}
             {!data?.lists.find(list => list?._id === currentList?._id)?.categories?.length && (
@@ -76,7 +82,7 @@ const CategoryScroll = ({ containerRef, setProblemScroll }) => {
                     <p className="mt-1 text-sm">Get started by creating a new category.</p>
                 </div>
             )}
-            {data?.lists.find(list => list?._id === currentList?._id)?.categories?.map((category) => (
+            {categories.map((category) => ( // Use the `categories` from useMemo for cleaner access
                 <div
                     key={category._id}
                     ref={el => categoryRefs.current[category._id] = el}
@@ -95,12 +101,12 @@ const CategoryScroll = ({ containerRef, setProblemScroll }) => {
                                 : `${elevatedCategory && category._id === elevatedCategory
                                     ? 'bg-gray-50 dark:bg-gray-800 w-10/12 shadow-xl'
                                     : 'bg-gray-200 dark:bg-gray-700/50 w-8/12 opacity-70'}
-                                    hover:bg-gray-100 text-gray-700 dark:hover:bg-gray-700 dark:text-gray-300`}`
+                                hover:bg-gray-100 text-gray-700 dark:hover:bg-gray-700 dark:text-gray-300`}`
                         }`}
                 >
                     {/* delete icon */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span onClick={(event) => handleDelete(currentList._id,category._id, event)} className="material-symbols-outlined">
+                        <span onClick={(event) => handleDelete(currentList._id, category._id, event)} className="material-symbols-outlined">
                             delete
                         </span>
                         <span className={`text-sm truncate ${theme === 'cyberpunk' ? 'text-cyan-300 neon-text' : ''}`}>{category.title}</span>
@@ -120,7 +126,7 @@ const CategoryScroll = ({ containerRef, setProblemScroll }) => {
             ))}
             <div className="h-[20vh]"></div>
         </div>
-    )
-}
+    );
+};
 
-export default CategoryScroll
+export default CategoryScroll;
