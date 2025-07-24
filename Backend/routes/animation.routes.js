@@ -4,7 +4,7 @@ const router = express.Router();
 import animation from "../controllers/animation.controller.js";
 import {checkAnimationAccess} from "../middlewares/animation.middleware.js";
 
-router.post('/anim/upload', upload.single('animation'), animation.uploadAnimation);
+router.post('/animPack/upload', upload.array(pack,3), animation.uploadAnimation);
 router.get('/anim/:id',checkAnimationAccess,animation.getAnimationById);
 router.get('/anim',animation.getAllAnimationsForUserId);
 

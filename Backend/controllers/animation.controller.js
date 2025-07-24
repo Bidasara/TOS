@@ -4,28 +4,42 @@ import { ApiResponse } from '../utils/apiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/apiError.js';
 import { Purchase } from '../models/purchase.model.js';
+import { User } from '../models/user.model.js';
 
 const uploadAnimation  = asyncHandler(async (req,res)=> {
-    const animationLocalPath = await req.file?.path;
+    const IdlePath = await req.files[pack][0].path;
+    const AttackPath = await req.files[pack][1].path;
+    const BreakPath = await req.files[pack][2].path;
 
-    if(!animationLocalPath)
-    throw new ApiError(400, 'Animation file is required');
+    if(!IdlePath || !AttackPath || !BreakPath) {
+        throw new ApiError(400, 'All animation files are required');
+    }
 
-    const animation = await uploadOnCloudinary(animationLocalPath);
-
-    if(!animation)
-    throw new ApiError(500, 'Error uploading animation to Cloudinary');
+    const idle = await uploadOnCloudinary(IdlePath);
+    if(!idle)
+        throw new ApiError(500, 'Error uploading idle animation to Cloudinary');
+    const attack = await uploadOnCloudinary(AttackPath);
+    if(!attack)
+        throw new ApiError(500, 'Error uploading attack animation to Cloudinary');
+    const breaks = await uploadOnCloudinary(BreakPath);
+    if(!breaks)
+        throw new ApiError(500, 'Error uploading break animation to Cloudinary');
 
     const newAnimation = await Animation.create({
-        title: req.file?.originalname || 'Untitled Animation',
-        link: animation.url
+        title: req.body.title || 'Untitled Animation',
+        pack: {
+            idle: idle.secure_url,
+            attack: attack.secure_url,
+            break: breaks.secure_url
+        },
+        price: req.body.price || 0
     })
     if(!newAnimation)
     throw new ApiError(500, 'Error creating animation');
     return res.status(201).json(new ApiResponse(200, newAnimation, 'Animation uploaded successfully'));
 })
 
-const getAllAnimationsForUserId = asyncHandler(async (req,res)=>{
+const getAllAnimationPackForUserId = asyncHandler(async (req,res)=>{
     const userId = req.user.id;
 
     if(!userId) throw new ApiError(400, 'User not logged in');
@@ -68,13 +82,16 @@ const purchaseAnimation = asyncHandler(async (req,res) => {
     if(!user) {
         throw new ApiError(404, 'User not found');
     }
-    if(user.animations.includes(animationId)) {
-        return res.status(200).json(new ApiResponse(200, null, 'User already has access to this animation'));
-    } else {
-        user.animation.push(animationId);
-        await user.save();
-        return res.status(200).json(new ApiResponse(200, null, 'User granted access to animation successfully'));
+    try{
+        const purchase = await Purchase.create({
+            user: userId,
+            animation: animationId,
+            trialEnd: req.body.trialEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        })
+    } catch(err) {
+        throw new ApiError(500, 'Error creating purchase record');
     }
+    return res.status(201).json(new ApiResponse(200, null, 'Animation purchased successfully'));
 })
 
 export default {

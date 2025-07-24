@@ -14,21 +14,20 @@ const Scrollbar = () => {
     }, [data, currentList?._id])
 
     const scrollToCard = (idx) => {
+        setOpenCategory(null);
         if (idx < 0 || idx >= data?.lists?.length) return;
         setCurrentList(data?.lists[idx]);
-        setElevatedCategory(data?.lists[idx].categories?[0]._id: null);
-        setOpenCategory(null);
         setCenter(idx);
     }
 
     return (
-        <div className={`rounded-lg p-2 shadow transition-all duration-300 ${theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border border-pink-500' : 'bg-gray-100 dark:bg-gray-700'}`}>
+        <div className={`scrollbar-container transition-all duration-300 ${theme === 'tos' ? 'tos bg-opacity-90' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-white dark:bg-gray-800'}`}>
             <div className="flex items-center gap-3 z-10">
                 {/* left button */}
                 <button
                     onClick={() => scrollToCard(center-1)}
-                    className={`h-9 w-9 flex z-10 items-center justify-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform
-                        ${theme === 'cyberpunk' ? 'bg-black text-cyan-400 border border-cyan-400 neon-text hover:bg-pink-900/30' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700 active:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-300'}`}
+                    className={`h-9 w-9 flex z-10 items-center justify-center rounded-full border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform
+                        ${theme === 'tos' ? 'tos-border tos-accent bg-tos-bg hover:bg-tos-blue hover:text-tos-grey tos-theme-mono shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700 active:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-300'}`}
                     disabled={center === 0}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -38,12 +37,9 @@ const Scrollbar = () => {
 
                 {/* Title */}
                 <div className="relative flex-1 flex items-center justify-center py-2">
-                    <div className="absolute inset-0 flex items-center px-8">
-                        <div className={`w-full h-[2px] rounded ${theme === 'cyberpunk' ? 'bg-pink-500' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
-                    </div>
-                    <div className={`relative z-10 px-4 py-1 rounded-full font-medium shadow-sm
-                        ${theme === 'cyberpunk' ? 'bg-black border border-cyan-400 text-cyan-400 neon-text' : 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white'}`}>
-                        {currentList?.title || "Select a list"}
+                    <div className={`relative z-10 flex items-center px-6 py-2 rounded-full font-bold shadow-lg border-2 transition-colors
+                        ${theme === 'tos' ? 'bg-tos-bg tos-accent tos-theme-mono tos-border tos-shadow' : 'bg-white text-gray-800 dark:bg-gray-800 dark:text-white'}`}>
+                        <span>{currentList?.title || "Select a list"}</span>
                         {currentList?._id && (
                             <button
                                 onClick={async (e) => {
@@ -59,7 +55,8 @@ const Scrollbar = () => {
                                     setElevatedCategory(null);
                                     setOpenCategory(null);
                                 }}
-                                className={`ml-2 p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors border border-transparent hover:border-red-400`}
+                                className={`ml-2 p-1 rounded-full border transition-colors
+                                    ${theme === 'tos' ? 'border-tos-blue text-red-500 hover:tos-shadow' : 'border-transparent text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 hover:border-red-400'}`}
                                 title="Delete this list"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -73,8 +70,8 @@ const Scrollbar = () => {
                 {/* right button */}
                 <button
                     onClick={() => scrollToCard(center+1)}
-                    className={`h-9 w-9 flex z-10 items-center justify-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform
-                        ${theme === 'cyberpunk' ? 'bg-black text-cyan-400 border border-cyan-400 neon-text hover:bg-pink-900/30' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700 active:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-300'}`}
+                    className={`h-9 w-9 flex z-10 items-center justify-center rounded-full border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transform
+                        ${theme === 'tos' ? 'tos-border tos-accent bg-tos-bg hover:bg-tos-blue hover:text-tos-grey tos-theme-mono shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-700 active:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-300'}`}
                     disabled={center === data?.lists.length - 1 || !data?.lists.length}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

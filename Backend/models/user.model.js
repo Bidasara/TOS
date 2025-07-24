@@ -60,7 +60,11 @@ const userSchema = new Schema({
     lockedUntil: {
         type: Date,
         default: null,
-    }
+    },
+    cart: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Animation'
+    }]
 },{
     timestamps: true
 });

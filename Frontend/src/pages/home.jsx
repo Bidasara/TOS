@@ -26,9 +26,9 @@ function HomeContent() {
     currFunc = addProblem;
   
   return (
-    <div className={`flex flex-col flex-1 transition-colors duration-300 min-h-0 h-[calc(100vh-64px)] 
-      ${theme === 'light' ? 'bg-gray-100' : theme === 'dark' ? 'bg-gray-900' : 'bg-black cyberpunk-bg'}`}>
-      <div className='flex flex-1 p-4 gap-4 min-h-0'>
+    <div className={`flex flex-col flex-1 transition-colors duration-300 min-h-0 overflow-x-hidden
+      ${theme === 'light' ? 'bg-gray-100' : theme === 'dark'  ? 'bg-gray-900' : theme=== 'tos'? 'bg-blue-950': 'bg-black cyberpunk-bg'}`}>
+      <div className='flex flex-1 p-4 w-full gap-4 min-h-0'>
         <Animation/>
         <NoteModal isOpen={noteModalOpen} onClose={() => setNoteModalOpen(false)} {...noteModalContent}         
           addToRevise={noteModalContent.addToRevise}

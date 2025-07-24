@@ -9,6 +9,9 @@ router.get('/dashboard/:username', userController.getUserDashboard);
 router.use(authenticateJWT);
 router.patch('/profile',authenticateJWT,userController.updateCurrentUserProfile);
 router.delete('/account',authenticateJWT,userController.deleteAccount);
+router.get('/cart',authenticateJWT,userController.getCart);
+router.post('/cart/:animationId',authenticateJWT,userController.addToCart);
+router.delete('/cart/:animationId',authenticateJWT,userController.removeFromCart);
 
 router.get('/',authenticateJWT,requireRole('admin'), userController.getAllUsers);
 router.get('/:id',authenticateJWT, requireRole('admin'), userController.getUserById);

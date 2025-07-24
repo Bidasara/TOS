@@ -4,7 +4,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import Checkbox from '../common/Checkbox';
 
 const Problem = ({ item:problem,elevate:elevatedProblem }) => {
-    const { updateProblemStatus, setNoteModalOpen, setNoteModalContent, updateProblemRevisedStatus, deleteProblem,openCategory,currentList, setElevatedProblem } = useProblemContext();
+    const { updateProblemStatus, setNoteModalOpen, setNoteModalContent, updateProblemRevisedStatus, deleteProblem,openCategory,currentList, setElevatedProblem,setOpenCategory } = useProblemContext();
     const { theme } = useTheme();
     const [checked, setChecked] = useState(problem.solved === true);
     const [showNotes, setShowNotes] = useState(false);

@@ -14,6 +14,11 @@ export const AuthProvider = ({ children }) => {
   const [ATokenExpiry, setATokenExpiry] = useState(null);
   const [RTokenExpiry, setRTokenExpiry] = useState(null);
   const [error, setError] = useState(null);
+  const [cart,setCart] = useState([]);
+
+  useEffect(() => {
+    localStorage.setItem("cart",JSON.stringify(cart));
+  },[cart]);
 
   useEffect(() => {
     setLogoutCallback(logout);
@@ -32,6 +37,50 @@ export const AuthProvider = ({ children }) => {
       }
     }
   }, [accessToken, ATokenExpiry ]);
+
+  const getCart = async () => {
+    try {
+      const response = await api.get('/user/cart',{
+        headers: {
+          Authorization: `Bearer ${getGlobalAccessToken()}`
+      }})
+      console.log("Cart retrieved successfully:", response.data);
+      setCart(response.data.data);
+    } catch (error) {
+      console.error("Error retrieving cart:", error);
+      setError("Failed to retrieve cart. Please try again.");
+    }
+  }
+
+  const addToCart = async (animationId) => {
+    try {
+      const response = await api.post(`/user/cart/:${animationId}`, {
+        headers: {
+          Authorization: `Bearer ${getGlobalAccessToken()}`
+        }
+      });
+      console.log("Animation added to cart successfully:", response.data);
+      setCart(response.data.data);
+    } catch (error) {
+      console.error("Error adding animation to cart:", error);
+      setError("Failed to add animation to cart. Please try again.");
+    }
+  }
+
+  const removeFromCart = async (animationId) => {
+    try {
+      const response = await api.delete(`/user/cart/:${animationId}`, {
+        headers: {
+          Authorization: `Bearer ${getGlobalAccessToken()}`
+        }
+      });
+      console.log("Animation removed from cart successfully:", response.data);
+      setCart(response.data.data);
+    } catch (error) {
+      console.error("Error removing animation from cart:", error);
+      setError("Failed to remove animation from cart. Please try again.");
+    }
+  }
 
   const login = async (formData) => {
     try {

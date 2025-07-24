@@ -62,7 +62,10 @@ const SpriteAnimation = ({
         // H  = frameCount × frameHeight
         : `${frameWidth * scale}px ${frameHeight * frameCount * scale}px`;
 
-
+    // Combine flipping and translation in transform
+    let transform = '';
+    if (flipped) transform += 'scaleX(-1) ';
+    transform += `translateX(${translateX}) translateY(${translateY})`;
 
     return {
       width: `${frameWidth * scale}px`, // scaled frame width
@@ -73,11 +76,9 @@ const SpriteAnimation = ({
       backgroundSize,
       imageRendering: 'pixelated',
       zIndex: 10,
-      position: 'absolute',
-      bottom: translateY,
-      left: translateX,
+      // position: 'absolute',
+      transform,
       objectFit: 'none',
-      transform: flipped ? 'scaleX(-1)' : 'none' // Flip the sprite if needed
     };
   };
 
@@ -101,15 +102,37 @@ import { idleShinobi, attackShinobi } from '../../assets/Shinobi/All.jsx';
 import { idleMage, attackMage } from '../../assets/Lightning_Image/All.jsx';
 import { idleDemon, attackDemon } from '../../assets/Demon/All.jsx';
 import { idleKnight, attackKnight } from '../../assets/Knight/All.jsx';
+import { idleWizard, attackWizard } from '../../assets/Wizard/All.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
+import { rabbit } from '../../assets/Rabbit/All.jsx'; // Importing Rabbit sprite
 
 // Usage example component
-const SpriteDemo = () => {
+const SpriteDemo = ({character:characterSelected=null,move=null,scale:scaleTo}) => {
   const {triggerAttack,loop,setLoop,currentAnimation,setCurrentAnimation,isPlaying,setIsPlaying,setAnimationUp,currCharacter,setCurrCharacter} = useTheme();
 
   // Example sprite data - you would replace these with your actual sprites
   const animations = {
     characters: {
+      Rabbit: {
+        translateY: '50%',
+        scale: 2,
+        idle: {
+          spriteSheet: rabbit,
+          frameWidth: 128,
+          frameHeight: 128,
+          frameCount: 20,
+          direction: 'vertical',
+          fps: 12
+        },
+        attack_1: {
+          spriteSheet: rabbit,
+          frameWidth: 128,
+          frameHeight: 128,
+          frameCount: 20,
+          direction: 'vertical',
+          fps: 12,
+        },
+      },
       Shinobi: {
         translateX: '-10%',
         scale: 3,
@@ -151,7 +174,7 @@ const SpriteDemo = () => {
         },
       },
       Demon: {
-        translateX: '-20%',
+        translateX: '10%',
         scale: 3,
         flipped: true,
         idle: {
@@ -172,8 +195,9 @@ const SpriteDemo = () => {
         },
       },
       Knight: {
-        translateX: '20%',
-        scale: 4,
+        translateX: '30%',
+        translateY: '40%',
+        scale: 3,
         idle: {
           spriteSheet: idleKnight,
           frameWidth: 80,
@@ -190,6 +214,27 @@ const SpriteDemo = () => {
           direction: 'vertical',
           fps: 10
         },
+      },
+      Wizard: {
+        translateX: '15%',
+        translateY: '50%',
+        scale: 3,
+        idle: {
+          spriteSheet: idleWizard,
+          frameWidth: 150,
+          frameHeight: 80,
+          frameCount: 6,
+          direction: 'vertical',
+          fps: 6
+        },
+        attack_1: {
+          spriteSheet: attackWizard,
+          frameWidth: 150,
+          frameHeight: 80,
+          frameCount: 9,
+          direction: 'vertical',
+          fps: 6
+        },
       }
     }
   };
@@ -201,13 +246,22 @@ const SpriteDemo = () => {
     setAnimationUp(false);
     return;
   }
+  const characterChosen = characterSelected || currCharacter;
+  const moveChosen = move || currentAnimation;
   // Get the current animation data from the animations object
-  const { spriteSheet, frameWidth, frameHeight, frameCount, fps, row = 0, direction } = animations.characters[currCharacter][currentAnimation] || {};
+  const { spriteSheet, frameWidth, frameHeight, frameCount, fps, row = 0, direction } = animations.characters[characterChosen][moveChosen] || {};
 
   // Get character properties with defaults
-  const { scale = 1, translateX = '0', translateY = '0', total_frames = frameCount, flipped } = animations.characters[currCharacter] || {};
+  const { total_frames = frameCount, flipped } = animations.characters[characterChosen] || {};
+  let translateX = characterSelected ? '0' : animations.characters[characterChosen].translateX || '0';
+  let translateY = characterSelected ? '0' : animations.characters[characterChosen].translateY || '0';
+  let scale = animations.characters[characterChosen].scale ;
+  if(scaleTo) {
+    scale = scaleTo;
+  }
+  console.log(translateX)
 
-  const allCharacters = ['Shinobi', 'Mage', 'Demon', 'Knight'];
+  const allCharacters = ['Demon','Wizard','Rabbit'];
 
   return (
     <div className='flex flex-col justify-between h-full gap-4 py-3 pl-2'>
@@ -233,20 +287,22 @@ const SpriteDemo = () => {
           />
         )}
       </div>
-      <div className='flex flex-row flex-wrap gap-2 items-center'>
-        {allCharacters.map(chars => (
-          <button
-            className={`p-2 rounded-full ${currCharacter === chars ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            key={chars}
-            onClick={() => {
-              setCurrCharacter(chars);
-              setCurrentAnimation('idle'); // Reset to idle when changing character
-            }}
-          >
-            {chars}
-          </button>
-        ))}
-      </div>
+      {!characterSelected && (
+        <div className='flex flex-row flex-wrap gap-2 items-center'>
+          {allCharacters.map(chars => (
+            <button
+              className={`p-2 rounded-full ${currCharacter === chars ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              key={chars}
+              onClick={() => {
+                setCurrCharacter(chars);
+                setCurrentAnimation('idle'); // Reset to idle when changing character
+              }}
+            >
+              {chars}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

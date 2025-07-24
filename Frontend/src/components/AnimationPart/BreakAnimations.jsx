@@ -6,57 +6,42 @@ const BreakAnimation = ({
     frameCount,        // Total number of frames
     fps = 12,          // Frames per second (animation speed)
     direction = 'horizontal', // 'horizontal' or 'vertical' (for sprite sheets)
-    className = '',    // Additional CSS classes
-    scale = 1,
+    className = 'border-2 border-black',    // Additional CSS classes
+    scale = 1,      // Remove scale, not needed
     translateX = '0',
     translateY = '0',
     row = 0,
     total_frames,
     flipped = false, // Whether to flip the sprite horizontally
 }) => {
-    // Use internal state for playing if not controlled externally
     const [currentFrame, setCurrentFrame] = useState(0);
 
     useEffect(() => {
-        setCurrentFrame(0);
+        setCurrentFrame(1);
     }, [spriteSheet, frameCount, direction, row])
-    // Debug: log prop changes
+
     useEffect(() => {
-        const intervalId = setInterval(() => {
-            setCurrentFrame(prevFrame => {
-                const nextFrame = (prevFrame + 1) % frameCount;
-
-                // Check if animation completed
-                if (nextFrame === 0) {
-                    clearInterval(intervalId);
-                    return prevFrame;
-                }
-
-                return nextFrame;
-            });
-        }, 1000 / fps);
-
-        return () => clearInterval(intervalId);
-    }, [ frameCount, fps, spriteSheet, direction, row]);
+    const intervalId = setInterval(() => {
+        setCurrentFrame(prevFrame => {
+            const nextFrame = (prevFrame + 1) % frameCount;
+            return nextFrame;
+        });
+    }, 1000/fps);
+    return () => clearInterval(intervalId);
+}, [frameCount, fps]);
 
     const getStyle = () => {
-        // Calculate the background position based on the current frame and row
-        const backgroundPosition = direction === 'horizontal'
-            ? `-${currentFrame * frameWidth * scale}px -${row * frameHeight * scale}px`
-            : `-${row * frameWidth * scale}px -${currentFrame * frameHeight * scale}px`;
-
-        const backgroundSize =
-            direction === 'horizontal'
-                // W  = frameCount × frameWidth
-                ? `${frameWidth * total_frames * scale}px`
-                // H  = frameCount × frameHeight
-                : `${frameWidth * scale}px ${frameHeight * frameCount * scale}px`;
-
-
-
+        let backgroundPosition, backgroundSize;
+        if (direction === 'horizontal') {
+            backgroundPosition = `-${currentFrame * 100}% ${0}%`;
+            backgroundSize = `${frameCount * 100}% 100%`;
+        } else {
+            backgroundPosition = `${0}% ${currentFrame * 10}%`;
+            backgroundSize = `100% ${frameCount*100}%`;
+        }
         return {
-            width: `${frameWidth * scale}px`, // scaled frame width
-            height: `${frameHeight * scale}px`, // scaled frame height
+            width: '100%',
+            height: '100%',
             backgroundImage: `url(${spriteSheet})`,
             backgroundPosition,
             backgroundRepeat: 'no-repeat',
@@ -64,10 +49,10 @@ const BreakAnimation = ({
             imageRendering: 'pixelated',
             zIndex: 100,
             position: 'absolute',
-            top: translateY,
-            left: translateX,
-            objectFit: 'none',
-            transform: flipped ? 'scaleX(-1)' : 'none' // Flip the sprite if needed
+            top: 0,
+            left: 0,
+            objectFit: 'fill',
+            transform: flipped ? 'scaleX(-1)' : 'none'
         };
     };
 
@@ -80,9 +65,10 @@ const BreakAnimation = ({
 };
 
 import { fireAnimation } from '../../assets/Fire/All.jsx';
+import { light } from '../../assets/LightningBreak/All.jsx';
 
 // Usage example component
-const BreakDemo = ({ animation = "fire" }) => {
+const BreakDemo = ({ animation = "fire", delay=900 }) => {
     // Only fire animation for now, but can be extended
     const animations = {
         fire: {
@@ -95,12 +81,23 @@ const BreakDemo = ({ animation = "fire" }) => {
             scale: 0.2,
             flipped: true,
         },
+        light: {
+            spriteSheet: light,
+            frameWidth: 82,
+            frameHeight: 19,
+            frameCount: 10,
+            fps: 6,
+            direction: 'vertical',
+            scale: 1,
+            flipped: false,
+        }
     };
     const { spriteSheet, frameWidth, frameHeight, frameCount, fps, direction, scale, flipped } = animations[animation] || {};
     if (!spriteSheet) return null;
     return (
-        <div style={{ position: 'relative', width: frameWidth, height: frameHeight }}>
+        <div className='left-0 top-0' style={{ position: 'absolute', width: "100%", height: "100%" }}>
             <BreakAnimation
+                delay={delay}
                 spriteSheet={spriteSheet}
                 frameWidth={frameWidth}
                 frameHeight={frameHeight}

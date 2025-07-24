@@ -6,9 +6,7 @@ const Scroll = ({ items, renderItem: ItemComponent, height, openCategory: open, 
     const containerRef = useRef(null);
     const itemRef = useRef({});
     const [localElevate, setLocalElevate] = useState(null); // Changed initial state to null
-    useEffect(() => {
-        setOpen(null)
-    }, [currentList._id])
+    
     
     useEffect(() => {
         const node = containerRef.current;
@@ -68,9 +66,16 @@ const Scroll = ({ items, renderItem: ItemComponent, height, openCategory: open, 
                             data-id={item._id}
                             key={item._id}
                             onClick={() => {
-                                setOpen(prev => !prev ? item._id : null);
+                                setOpen(prev => {if(!prev){
+                                    localStorage.setItem(`openCategory_${currentList._id}`,`${item._id}`)
+                                    console.log(item._id)
+                                    return item._id;
+                                } 
+                                    localStorage.removeItem(`openCategory_${currentList._id}`)
+                                    return null;}
+                                );
                             }}
-                            className={`${open ? "h-full" : height} ${elevate === item._id ? "w-10/12" : "w-8/12"} mx-auto py-1.5`}
+                            className={`${open ? "h-full" : height} ${elevate === item._id ? "w-10/12" : "w-8/12"} mx-auto py-1.5 relative`}
                         >
                             <ItemComponent item={item} elevate={elevate} open={open} />
                         </div>

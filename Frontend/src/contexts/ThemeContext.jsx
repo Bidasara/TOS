@@ -23,16 +23,18 @@ export const ThemeProvider = ({ children }) => {
   // Initialize theme on mount
   useEffect(() => {
     localStorage.setItem('theme', theme);
-    document.documentElement.classList.remove('dark', 'cyberpunk');
+    document.documentElement.classList.remove('dark', 'cyberpunk', 'tos');
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else if (theme === 'cyberpunk') {
       document.documentElement.classList.add('cyberpunk');
+    } else if (theme === 'tos') {
+      document.documentElement.classList.add('tos');
     }
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'cyberpunk' : 'light');
+    setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'cyberpunk' : prev === 'cyberpunk' ? 'tos' : 'light');
   };
 
   return (

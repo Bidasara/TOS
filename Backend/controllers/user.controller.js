@@ -3,8 +3,7 @@ import {asyncHandler} from '../utils/asyncHandler.js';
 import {ApiResponse} from '../utils/apiResponse.js';
 import {ApiError} from '../utils/apiError.js';
 import { List } from '../models/list.model.js';
-import { Problem } from '../models/problem.model.js';
-import { get } from 'mongoose';
+import { Animation } from '../models/animation.model.js';
 
 const getUserDashboard = asyncHandler(async (req, res) => {
   const username = req.params.username || req.user.username;
@@ -45,6 +44,48 @@ const getUserDashboard = asyncHandler(async (req, res) => {
     console.error(error);
     throw new ApiError(500, 'Dashboard aggregation failed');
   }
+});
+
+const getCart = asyncHandler(async (req, res) => {
+  const userId= req.user.id;
+  const user = await User.findById(userId).populate('cart');
+  if(!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  return res.status(200).json(new ApiResponse(200, user.cart, 'User cart retrieved successfully'));
+});
+
+const addToCart = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { animationId } = req.params;
+  const animation = await Animation.findById(animationId);
+  if (!animation) {
+    throw new ApiError(404, 'Animation not found');
+  }
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $addToSet: { cart: animationId } },
+    { new: true, runValidators: true }
+  ).populate('cart');
+
+  return res.status(200).json(new ApiResponse(200, user.cart, 'Animation added to cart successfully'));
+});
+
+const removeFromCart = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { animationId } = req.params;
+  const animation = await Animation.findById(animationId);
+  if (!animation) {
+    throw new ApiError(404, 'Animation not found');
+  }
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $pull: { cart: animationId } },
+    { new: true, runValidators: true }
+  ).populate('cart');
+
+  return res.status(200).json(new ApiResponse(200, user.cart, 'Animation removed from cart successfully'));
 });
 
 const updateCurrentUserProfile = asyncHandler( async (req, res) => {
@@ -265,5 +306,8 @@ export default {
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  getCart,
+  addToCart,
+  removeFromCart,
 };

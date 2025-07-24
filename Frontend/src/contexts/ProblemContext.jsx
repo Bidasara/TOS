@@ -58,7 +58,7 @@ export const ProblemProvider = ({ children }) => {
   const [totalRevised, setTotalRevised] = useState(0)
   // totalProblems: Total number of problems across all lists
   const [totalProblems, setTotalProblems] = useState(0)
-  // elevatedProblem: Stores the _id of the currently elevated problem
+  // elevatedProblem: Stores the _id of the currently elevated problemnote
   const [elevatedProblem, setElevatedProblem] = useState(null);
 
   // ===== NOTE MODAL STATE =====
@@ -249,8 +249,9 @@ export const ProblemProvider = ({ children }) => {
       }));
 
       setCurrentList(createdList);
-      setElevatedCategory(null);
       setOpenCategory(null);
+      setElevatedCategory(null);
+      // setOpenCategory(null);
 
       // Update localStorage with new data
       const updatedData = { ...data, lists: [...data.lists, createdList] };
@@ -573,36 +574,13 @@ export const ProblemProvider = ({ children }) => {
     }
   };
 
-  // Persist elevatedProblem and openCategory in localStorage
+  // Per-list persistence for openCategory and elevatedProblem
   useEffect(() => {
-    if (elevatedProblem) {
-      localStorage.setItem('elevatedProblem', JSON.stringify(elevatedProblem));
-    } else {
-      localStorage.removeItem('elevatedProblem');
-    }
-  }, [elevatedProblem]);
-
-  useEffect(() => {
-    if (openCategory) {
-      localStorage.setItem('openCategory', JSON.stringify(openCategory));
-    } else {
-      localStorage.removeItem('openCategory');
-    }
-  }, [openCategory]);
-
-  // Restore elevatedProblem and openCategory from localStorage on mount or when currentList changes
-  useEffect(() => {
-    const storedOpenCategory = localStorage.getItem('openCategory');
-    if (storedOpenCategory) {
-      try {
-        setOpenCategory(JSON.parse(storedOpenCategory));
-      } catch {}
-    }
-    const storedElevatedProblem = localStorage.getItem('elevatedProblem');
-    if (storedElevatedProblem) {
-      try {
-        setElevatedProblem(JSON.parse(storedElevatedProblem));
-      } catch {}
+    if (currentList?._id) {
+      if (currentList.categories.find(category => category._id===openCategory))
+        setOpenCategory(openCategory);
+      else if(currentList.categories.find(category=>category._id===localStorage.getItem(`openCategory_${currentList._id}`)))
+        setOpenCategory(localStorage.getItem(`openCategory_${currentList._id}`));
     }
   }, [currentList?._id]);
 

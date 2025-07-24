@@ -10,6 +10,10 @@ const purchaseSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Animation',
         required: true,
+    },
+    trialEnd: {
+        type: Date,
+        default: null
     }
 })
 

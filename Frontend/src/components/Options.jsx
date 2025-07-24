@@ -22,10 +22,11 @@ const Options = (props) => {
     const [inputVal, setInputVal] = useState("")
 
     return (
-        <div className={`w-1/4 my-2 mr-2 rounded-xl p-5 flex flex-col justify-between shadow-lg transition-all duration-300 ${theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-white border border-gray-100 dark:bg-gray-800 dark:border-gray-700'}`}>
+        <div className={`rounded-xl p-4 shadow-lg transition-all duration-300 
+      ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-white dark:bg-gray-800'}`}>
 
             {/* Recommended Lists */}
-            <h2 className={`text-lg font-bold mb-4 ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-gray-800 dark:text-white'}`}>Recommended Lists</h2> 
+            <h2 className={`text-lg font-bold mb-4 ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-indigo-800 dark:text-white'}`}>Recommended Lists</h2> 
             <div className={`space-y-3 overflow-auto ${theme === 'cyberpunk' ? 'cyberpunk-scrollbar' : ''}`}>
                 {(Array.isArray(recomList) ? recomList : []).map(list => (
                     <div key={list._id} onClick={() => addToList(list._id)}
@@ -33,23 +34,23 @@ const Options = (props) => {
                             ${theme === 'cyberpunk' ? 'bg-black border border-cyan-400 neon-text hover:bg-pink-900/30' : 'border border-gray-100 hover:border-indigo-200 hover:bg-indigo-50 dark:border-gray-700 dark:hover:border-indigo-700 dark:hover:bg-gray-700/50'}`}
                     >
                         <div className="flex justify-between items-center">
-                            <h3 className={`font-medium transition-colors ${theme === 'cyberpunk' ? 'text-cyan-300 neon-text group-hover:text-pink-400' : 'text-gray-800 group-hover:text-indigo-600 dark:text-gray-200 dark:group-hover:text-indigo-400'}`}>{list.title}</h3>
+                            <h3 className={`font-medium transition-colors ${theme === 'tos' ? 'tos-light group-hover:tos-accent' : theme === 'cyberpunk' ? 'text-cyan-300 neon-text group-hover:text-pink-400' : 'text-gray-800 group-hover:text-indigo-600 dark:text-gray-200 dark:group-hover:text-indigo-400'}`}>{list.title}</h3>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Quick Stats */}
-            <div className="my-6">
-                <h3 className={`text-sm font-semibold mb-3 ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-gray-700 dark:text-gray-300'}`}>Quick Stats</h3>
+            {/* QuickStats Section */}
+            <div className={`quickstats-container my-4 p-3 rounded-lg shadow transition-all duration-300 ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border border-cyan-400' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                <h3 className={`text-sm font-semibold mb-3 ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-gray-700 dark:text-gray-300'}`}>Quick Stats</h3>
                 <div className="grid grid-cols-2 gap-3">
-                    <div className={`p-4 rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] ${theme === 'cyberpunk' ? 'bg-black border border-pink-500 neon-text' : 'bg-indigo-50 dark:bg-indigo-900/30'}`}>
-                        <div className={`text-xs mb-1 ${theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-indigo-600 dark:text-indigo-400'}`}>Problems Solved</div>
-                        <div className={`text-2xl font-bold ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-indigo-700 dark:text-indigo-300'}`}>{totalSolved}/{totalProblems}</div>
+                    <div className={`p-4 rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] ${theme === 'tos' ? 'bg-tos-bg border border-tos-accent' : theme === 'cyberpunk' ? 'bg-black border border-pink-500 neon-text' : 'bg-indigo-50 dark:bg-indigo-900/30'}`}>
+                        <div className={`text-xs mb-1 ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-indigo-600 dark:text-indigo-400'}`}>Problems Solved</div>
+                        <div className={`text-2xl font-bold ${theme === 'tos' ? 'tos-accent' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-indigo-700 dark:text-indigo-300'}`}>{totalSolved}/{totalProblems}</div>
                     </div>
-                    <div className={`p-4 rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] ${theme === 'cyberpunk' ? 'bg-black border border-cyan-400 neon-text' : 'bg-green-50 dark:bg-green-900/30'}`}>
-                        <div className={`text-xs mb-1 ${theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-green-600 dark:text-green-400'}`}>Problems Revised</div>
-                        <div className={`text-2xl font-bold ${theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-green-700 dark:text-green-300'}`}>{totalRevised}/{totalSolved}</div>
+                    <div className={`p-4 rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] ${theme === 'tos' ? 'bg-tos-bg border border-tos-accent' : theme === 'cyberpunk' ? 'bg-black border border-cyan-400 neon-text' : 'bg-green-50 dark:bg-green-900/30'}`}>
+                        <div className={`text-xs mb-1 ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-green-600 dark:text-green-400'}`}>Problems Revised</div>
+                        <div className={`text-2xl font-bold ${theme === 'tos' ? 'tos-accent' : theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-green-700 dark:text-green-300'}`}>{totalRevised}/{totalSolved}</div>
                     </div>
                 </div>
             </div>
