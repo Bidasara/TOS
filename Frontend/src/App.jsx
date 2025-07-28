@@ -11,6 +11,7 @@ import { ThemeProvider } from './contexts/ThemeContext.jsx'
 
 function App() {
   return (
+    <div className='h-screen w-screen'>
     <ThemeProvider>
       <Router>
         <AuthProvider>
@@ -26,6 +27,7 @@ function App() {
         </AuthProvider>
       </Router>
     </ThemeProvider>
+    </div>
   )
 }
 

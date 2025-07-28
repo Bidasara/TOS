@@ -6,23 +6,23 @@ import { ApiError } from '../utils/apiError.js';
 import { Purchase } from '../models/purchase.model.js';
 import { User } from '../models/user.model.js';
 
-const uploadAnimation  = asyncHandler(async (req,res)=> {
+const uploadAnimation = asyncHandler(async (req, res) => {
     const IdlePath = await req.files[pack][0].path;
     const AttackPath = await req.files[pack][1].path;
     const BreakPath = await req.files[pack][2].path;
 
-    if(!IdlePath || !AttackPath || !BreakPath) {
+    if (!IdlePath || !AttackPath || !BreakPath) {
         throw new ApiError(400, 'All animation files are required');
     }
 
     const idle = await uploadOnCloudinary(IdlePath);
-    if(!idle)
+    if (!idle)
         throw new ApiError(500, 'Error uploading idle animation to Cloudinary');
     const attack = await uploadOnCloudinary(AttackPath);
-    if(!attack)
+    if (!attack)
         throw new ApiError(500, 'Error uploading attack animation to Cloudinary');
     const breaks = await uploadOnCloudinary(BreakPath);
-    if(!breaks)
+    if (!breaks)
         throw new ApiError(500, 'Error uploading break animation to Cloudinary');
 
     const newAnimation = await Animation.create({
@@ -34,61 +34,69 @@ const uploadAnimation  = asyncHandler(async (req,res)=> {
         },
         price: req.body.price || 0
     })
-    if(!newAnimation)
-    throw new ApiError(500, 'Error creating animation');
+    if (!newAnimation)
+        throw new ApiError(500, 'Error creating animation');
     return res.status(201).json(new ApiResponse(200, newAnimation, 'Animation uploaded successfully'));
 })
 
-const getAllAnimationPackForUserId = asyncHandler(async (req,res)=>{
+const getAllAnimations = asyncHandler(async (req, res) => {
+    const animations = await Animation.find().select('-createdAt -updatedAt');
+    if (!animations || animations.length === 0) {
+        throw new ApiError(404, 'No animations found');
+    }
+    return res.status(200).json(new ApiResponse(200, animations, 'Animations retrieved successfully'));
+})
+
+const getAllAnimationPacksForUserId = asyncHandler(async (req, res) => {
     const userId = req.user.id;
 
-    if(!userId) throw new ApiError(400, 'User not logged in');
+    if (!userId) throw new ApiError(400, 'User not logged in');
 
-    const animationIds = Purchase.find({ user: userId}).select('-user -_id -createdAt -updatedAt');
+    const currentDate = new Date();
 
-    if(!animationIds || animationIds.length === 0) {
-        throw new ApiError(404, 'No animations found for this user');
+    const activePurchases = await Purchase.find({
+        user: userId,
+        trialEnd: { $gt: currentDate }
+    })
+    .select('animation')
+    .lean();
+
+    if (!activePurchases || activePurchases.length === 0) {
+        throw new ApiError(404, 'No active purchases found for this user');
     }
 
+    const animationIds = activePurchases.map(purchase => purchase.animation);
+
     const animations = await Animation.find({ _id: { $in: animationIds } }).select('-createdAt -updatedAt');
-    if(!animations || animations.length === 0) {
+    if (!animations || animations.length === 0) {
         throw new ApiError(404, 'No animations found of this animation IDs');
     }
 
     return res.status(200).json(new ApiResponse(200, animations, 'Animations retrieved successfully'));
 })
 
-const getAnimationById = asyncHandler(async (req, res) => {
-    const animationId = req.params.id;
-    if(!animationId) throw new ApiError(400, 'Animation ID is required');
-
-    const animation = await Animation.findById(animationId);
-    if(!animation) throw new ApiError(404, 'Animation not found');
-    return res.status(200).json(new ApiResponse(200, animation, 'Animation retrieved successfully'));
-})
-
-const purchaseAnimation = asyncHandler(async (req,res) => {
-    const {userId, animationId} = req.body;
-    if(!userId || !animationId) {
+const purchaseAnimation = asyncHandler(async (req, res) => {
+    const { userId, animationId } = req.body;
+    if (!userId || !animationId) {
         throw new ApiError(400, 'User ID and Animation ID are required');
     }
 
     const animation = await Animation.findById(animationId);
-    if(!animation) {
+    if (!animation) {
         throw new ApiError(404, 'Animation not found');
     }
 
     const user = await User.findById(userId);
-    if(!user) {
+    if (!user) {
         throw new ApiError(404, 'User not found');
     }
-    try{
+    try {
         const purchase = await Purchase.create({
             user: userId,
             animation: animationId,
             trialEnd: req.body.trialEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         })
-    } catch(err) {
+    } catch (err) {
         throw new ApiError(500, 'Error creating purchase record');
     }
     return res.status(201).json(new ApiResponse(200, null, 'Animation purchased successfully'));
@@ -96,7 +104,7 @@ const purchaseAnimation = asyncHandler(async (req,res) => {
 
 export default {
     uploadAnimation,
-    getAnimationById,
+    getAllAnimations,
     purchaseAnimation,
-    getAllAnimationsForUserId
+    getAllAnimationPacksForUserId
 }

@@ -1,7 +1,6 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import { setAccessToken as setGlobalAccessToken, getAccessToken as getGlobalAccessToken, setLogoutCallback,removeAccessToken } from "../authToken";
 
 const AuthContext = createContext();
 
@@ -12,7 +11,6 @@ export const AuthProvider = ({ children }) => {
   const [avatarLink, setAvatarLink] = useState(null);
   const [loading, setLoading] = useState(true);
   const [ATokenExpiry, setATokenExpiry] = useState(null);
-  const [RTokenExpiry, setRTokenExpiry] = useState(null);
   const [error, setError] = useState(null);
   const [cart,setCart] = useState([]);
 
@@ -21,11 +19,8 @@ export const AuthProvider = ({ children }) => {
   },[cart]);
 
   useEffect(() => {
-    setLogoutCallback(logout);
-  },[])
-  useEffect(() => {
     setLoading(true);
-  },[]);
+  },[])
 
   useEffect(() => {
     if (!accessToken) {
@@ -42,7 +37,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.get('/user/cart',{
         headers: {
-          Authorization: `Bearer ${getGlobalAccessToken()}`
+          Authorization: `Bearer ${accessToken}`
       }})
       console.log("Cart retrieved successfully:", response.data);
       setCart(response.data.data);
@@ -56,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post(`/user/cart/:${animationId}`, {
         headers: {
-          Authorization: `Bearer ${getGlobalAccessToken()}`
+          Authorization: `Bearer ${accessToken}`
         }
       });
       console.log("Animation added to cart successfully:", response.data);
@@ -71,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.delete(`/user/cart/:${animationId}`, {
         headers: {
-          Authorization: `Bearer ${getGlobalAccessToken()}`
+          Authorization: `Bearer ${accessToken}`
         }
       });
       console.log("Animation removed from cart successfully:", response.data);
@@ -91,15 +86,13 @@ export const AuthProvider = ({ children }) => {
       const { accessToken, user, accessTokenExpiry, refreshTokenExpiry } = response.data.data;
       setAccessToken(accessToken); // Store accessToken in memory
       setATokenExpiry(accessTokenExpiry);
-      setRTokenExpiry(refreshTokenExpiry);
       setUsername(user.username);
       setAvatarLink(user.avatar);
       localStorage.setItem("username", user.username);
       localStorage.setItem("avatarLink", user.avatar);
-      setGlobalAccessToken(accessToken);
       navigate("/");
     } catch (error) {
-
+      console.log(error)
       if (error.response && error.response.data && error.response.data.message) {
         setError(error.response.data.message);
       } else {
@@ -117,9 +110,8 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('username');
         localStorage.removeItem('avatarLink');
         localStorage.removeItem('userData');
-        removeAccessToken();
         window.dispatchEvent(new Event("user-logged-out"));
-        navigate('/');
+        navigate('/login');
       })
       .catch(error => {
         console.error("Logout failed:", error);
@@ -129,9 +121,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('username');
         localStorage.removeItem('avatarLink');
         localStorage.removeItem('userData');
-        removeAccessToken();
         window.dispatchEvent(new Event("user-logged-out"));
-        navigate('/');
       });
   };
 
@@ -150,17 +140,11 @@ export const AuthProvider = ({ children }) => {
       if (storedAvatarLink) {
         setAvatarLink(storedAvatarLink);
       }
-      setGlobalAccessToken(res.data.data.accessToken);
-
     } catch (err) {
-      // Don't log this as an error - it's expected when no valid refresh token exists
-      // (e.g., first visit, expired token, etc.)
       if (err.response?.status !== 403 && err.response?.status !== 400) {
         console.error("Token refresh failed:", err);
       }
-      // logout();
-
-      // Clear any existing auth state
+      logout();
       setAccessToken(null);
     } finally {
       setLoading(false);
@@ -183,8 +167,6 @@ export const AuthProvider = ({ children }) => {
       logout,
       ATokenExpiry,
       setATokenExpiry,
-      RTokenExpiry,
-      setRTokenExpiry,
       login
     }}>
       {children}

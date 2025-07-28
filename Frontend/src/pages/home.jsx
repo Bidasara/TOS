@@ -6,6 +6,9 @@ import { useTheme } from '../contexts/ThemeContext'
 import NoteModal from '../components/common/Notes.jsx'
 import Modal from '../components/common/Modal.jsx'
 import Input from '../components/common/Input.jsx'
+import { useEffect } from 'react'
+import api from '../api'
+import { getAccessToken } from '../authToken'
 
 function Home() {
   return (
@@ -25,8 +28,33 @@ function HomeContent() {
   if(func==='problem')
     currFunc = addProblem;
   
+  // Global animation fetch effect
+  useEffect(() => {
+    const fetchUserAnimations = async () => {
+      try {
+        const token = getAccessToken();
+        if (!token) return;
+        
+        const response = await api.get('/animation/anim', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        const userAnimations = response.data.data;
+        if (userAnimations && userAnimations.length > 0) {
+          localStorage.setItem('userAnimations', JSON.stringify(userAnimations));
+        }
+      } catch (error) {
+        console.error('Error fetching user animations:', error);
+      }
+    };
+
+    fetchUserAnimations();
+  }, []); // Run on each render
+
   return (
-    <div className={`flex flex-col flex-1 transition-colors duration-300 min-h-0 overflow-x-hidden
+    <div className={`h-9/10 w-full flex flex-col flex-1 transition-colors duration-300 min-h-0 overflow-x-hidden
       ${theme === 'light' ? 'bg-gray-100' : theme === 'dark'  ? 'bg-gray-900' : theme=== 'tos'? 'bg-blue-950': 'bg-black cyberpunk-bg'}`}>
       <div className='flex flex-1 p-4 w-full gap-4 min-h-0'>
         <Animation/>

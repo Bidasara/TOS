@@ -1,7 +1,9 @@
 import { ques } from "./models/ques.js";
 import { Problem } from "./models/problem.model.js";
+import { Animation } from "./models/animation.model.js";
+import { animationPacks } from "./db/animations.js";
 
-const insertQuestions = async () => {
+export const insertQuestions = async () => { 
   try {
     const problems = await Problem.find();
     if (problems.length > 0) {
@@ -19,5 +21,19 @@ const insertQuestions = async () => {
   }
 };
 
-// Call this after DB connection is established
-export default insertQuestions;
+export const insertAnimations = async () => {
+  try {
+    const animations = await Animation.find();
+    if (animations.length > 0) {
+      console.log("Animations already exist in the database. Skipping insertion.");
+      return;
+    }
+    } catch (error) {
+      console.error("Error inserting animations:", error);
+    }
+    // Delete existing data (optional)
+    await Animation.deleteMany({});
+    // Insert new data
+    const result = await Animation.insertMany(animationPacks);
+    console.log(`${result.length} animations inserted successfully!`);
+}

@@ -47,7 +47,7 @@ const Category = ({ item: category, elevate: elevatedCategory, open: openCategor
             >
                 {/* delete icon */}
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span onClick={(event) => handleDelete(currentList._id, category._id, event)} className="material-symbols-outlined">
+                    <span onClick={(event) => handleDelete(currentList._id, category._id, event)} className="material-symbols-outlined delete-icon">
                         delete
                     </span>
                     <span className={`text-sm truncate ${theme === 'cyberpunk' ? 'text-cyan-300 neon-text' : ''}`}>{category.title}</span>
@@ -57,11 +57,13 @@ const Category = ({ item: category, elevate: elevatedCategory, open: openCategor
                 </div>
             </div>
             {(openCategory && openCategory != "") && (
+                <>
                 <div className='h-4/5'>
                     <Scroll
                         items={data.lists?.find(list => list._id === currentList._id)?.categories?.find(cat => cat._id === openCategory)?.problems}
                         renderItem={Problem}
                         height={"h-2/5"}
+                        heightForProblem={"h-10/12"}
                         elevatedProblem={elevatedProblem}
                         setElevatedProblem={setElevatedProblem}
                     />
@@ -69,6 +71,7 @@ const Category = ({ item: category, elevate: elevatedCategory, open: openCategor
                         Add New Problem
                     </button>
                 </div>
+                </>
             )}
         </>
     )

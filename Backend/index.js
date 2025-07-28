@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import {app} from "./app.js";
-import insertQuestions from "./addData.js";
+import {insertQuestions,insertAnimations} from "./addData.js";
 import { seedRecommendedLists } from "./seedRecommendedLists.js";
 
 dotenv.config({
@@ -10,6 +10,7 @@ dotenv.config({
 
 connectDB()
 .then(async () => {
+    await insertAnimations();
     await insertQuestions();
     await seedRecommendedLists();
     app.listen(process.env.PORT || 8000, () => {

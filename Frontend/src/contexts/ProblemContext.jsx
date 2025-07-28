@@ -319,6 +319,7 @@ export const ProblemProvider = ({ children }) => {
         localStorage.setItem("userData", JSON.stringify(newData));
         return newData;
       });
+      setOpenCategory(null);
       console.log("Category deleted successfully");
     } catch (error) {
       console.error("Error deleting category:", error);

@@ -25,11 +25,11 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className={`w-full flex items-center justify-between px-6 py-3 shadow-md transition-all duration-300
+    <nav className={`w-full h-1/10 flex justify-between relative  px-6 shadow-md transition-all duration-300
       ${theme === 'tos' ? 'tos border-b-2 tos-border' : theme === 'cyberpunk' ? 'bg-black cyberpunk-bg neon-text border-b-2 border-pink-500' : 'bg-gray-300 dark:bg-gray-900'}`}>
       {/* Left - Logo */}
-      <div className="flex items-center gap-3 h-9/12">
-        <img title='Tech of Success' src={logo} style={{ imageRendering: 'pixelated' }} alt="Logo" className={`h-11 ${theme === 'tos' ? 'tos-accent tos-theme-mono' : ''}`} onClick={() => navigate("/")} />
+      <div className="content-center h-full">
+        <img title='Tech of Success' src={logo} style={{ imageRendering: 'pixelated' }} alt="Logo" className={`object-cover ${theme === 'tos' ? 'tos-accent tos-theme-mono' : ''}`} onClick={() => navigate("/")} />
       </div>
       {/* Right - Nav + Avatar */}
       <div className={`flex items-center gap-6 relative ${theme === 'tos' ? 'tos-theme-mono' : ''}`} ref={dropdownRef}>

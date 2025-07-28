@@ -6,21 +6,79 @@ const animationSchema = mongoose.Schema({
         required: true,
         trim: true
     },
+    scale: {
+        type: Number,
+        required: true
+    }, 
     pack: {
         idle: {
-            type: String,
-            required: true,
-            trim: true
+            sprite: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            frames: {
+                type: Number,
+                required: true
+            },
+            frameWidth: {
+                type: Number,
+                required: true
+            },
+            frameHeight: {
+                type: Number,
+                required: true
+            },
+            fps: {
+                type: Number,
+                required: true
+            }
         },
         attack: {
-            type: String,
-            required: true,
-            trim: true
+            sprite: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            frames: {
+                type: Number,
+                required: true
+            },
+            frameWidth: {
+                type: Number,
+                required: true
+            },
+            frameHeight: {
+                type: Number,
+                required: true
+            },
+            fps: {
+                type: Number,
+                required: true
+            }
         },
         break: {
-            type: String,
-            required: true,
-            trim: true
+            sprite: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            frames: {
+                type: Number,
+                required: true
+            },
+            frameWidth: {
+                type: Number,
+                required: true
+            },
+            frameHeight: {
+                type: Number,
+                required: true
+            },
+            fps: {
+                type: Number,
+                required: true
+            }
         }
     },
     price: {

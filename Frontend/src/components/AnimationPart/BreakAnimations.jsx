@@ -1,24 +1,20 @@
-import { useState, useEffect } from 'react';// A reusable sprite animation component
+import { useState, useEffect } from 'react';
 const BreakAnimation = ({
     spriteSheet,       // Path to sprite sheet OR array of individual sprite paths
     frameWidth,        // Width of each frame (if using sprite sheet)
     frameHeight,       // Height of each frame (if using sprite sheet)
     frameCount,        // Total number of frames
     fps = 12,          // Frames per second (animation speed)
-    direction = 'horizontal', // 'horizontal' or 'vertical' (for sprite sheets)
-    className = 'border-2 border-black',    // Additional CSS classes
-    scale = 1,      // Remove scale, not needed
-    translateX = '0',
-    translateY = '0',
+    direction = 'vertical', // 'horizontal' or 'vertical' (for sprite sheets)
+    className = '',    // Additional CSS classes
     row = 0,
-    total_frames,
-    flipped = false, // Whether to flip the sprite horizontally
+    scale=1,
 }) => {
     const [currentFrame, setCurrentFrame] = useState(0);
 
     useEffect(() => {
         setCurrentFrame(1);
-    }, [spriteSheet, frameCount, direction, row])
+    }, [spriteSheet, frameCount, row])
 
     useEffect(() => {
     const intervalId = setInterval(() => {
@@ -32,27 +28,20 @@ const BreakAnimation = ({
 
     const getStyle = () => {
         let backgroundPosition, backgroundSize;
-        if (direction === 'horizontal') {
-            backgroundPosition = `-${currentFrame * 100}% ${0}%`;
-            backgroundSize = `${frameCount * 100}% 100%`;
-        } else {
-            backgroundPosition = `${0}% ${currentFrame * 10}%`;
-            backgroundSize = `100% ${frameCount*100}%`;
-        }
+        // Each frame is (100 / frameCount)% of the height
+        backgroundPosition = `0px -${currentFrame * scale * frameHeight}px`;
+        backgroundSize = `${scale*frameWidth}px ${scale*frameCount * frameHeight}px`;
         return {
-            width: '100%',
-            height: '100%',
+            width: `${scale * frameWidth}px`,
+            height: `${scale * frameHeight}px`,
             backgroundImage: `url(${spriteSheet})`,
             backgroundPosition,
             backgroundRepeat: 'no-repeat',
             backgroundSize,
             imageRendering: 'pixelated',
             zIndex: 100,
-            position: 'absolute',
             top: 0,
             left: 0,
-            objectFit: 'fill',
-            transform: flipped ? 'scaleX(-1)' : 'none'
         };
     };
 
@@ -64,48 +53,21 @@ const BreakAnimation = ({
     );
 };
 
-import { fireAnimation } from '../../assets/Fire/All.jsx';
-import { light } from '../../assets/LightningBreak/All.jsx';
-
 // Usage example component
-const BreakDemo = ({ animation = "fire", delay=900 }) => {
-    // Only fire animation for now, but can be extended
-    const animations = {
-        fire: {
-            spriteSheet: fireAnimation,
-            frameWidth: 320,
-            frameHeight: 230,
-            frameCount: 72,
-            fps: 12,
-            direction: 'vertical',
-            scale: 0.2,
-            flipped: true,
-        },
-        light: {
-            spriteSheet: light,
-            frameWidth: 82,
-            frameHeight: 19,
-            frameCount: 10,
-            fps: 6,
-            direction: 'vertical',
-            scale: 1,
-            flipped: false,
-        }
-    };
-    const { spriteSheet, frameWidth, frameHeight, frameCount, fps, direction, scale, flipped } = animations[animation] || {};
-    if (!spriteSheet) return null;
+const BreakDemo = ({ pack, delay=900,scale }) => {
+    const { sprite, frameWidth, frameHeight, frames, fps } = pack.pack.break || {};
+    if (!sprite) return null;
+    console.log("width:", frameWidth, "height:", frameHeight, "frames:", frames);
     return (
-        <div className='left-0 top-0' style={{ position: 'absolute', width: "100%", height: "100%" }}>
+        <div>
             <BreakAnimation
                 delay={delay}
-                spriteSheet={spriteSheet}
+                spriteSheet={sprite}
                 frameWidth={frameWidth}
                 frameHeight={frameHeight}
-                frameCount={frameCount}
+                frameCount={frames}
                 fps={fps}
-                direction={direction}
                 scale={scale}
-                flipped={flipped}
             />
         </div>
     );

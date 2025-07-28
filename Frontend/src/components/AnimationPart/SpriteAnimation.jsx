@@ -5,7 +5,7 @@ const SpriteAnimation = ({
   frameHeight,       // Height of each frame (if using sprite sheet)
   frameCount,        // Total number of frames
   fps = 12,          // Frames per second (animation speed)
-  direction = 'horizontal', // 'horizontal' or 'vertical' (for sprite sheets)
+  direction = 'vertical', // 'horizontal' or 'vertical' (for sprite sheets)
   loop = true,       // Whether animation should loop
   autoPlay = true,   // Whether animation should play automatically
   isPlaying: externalIsPlaying, // Optional external control
@@ -22,6 +22,7 @@ const SpriteAnimation = ({
   const {isPlaying,setIsPlaying} = useTheme();
   // Use external control if provided
   const playing = externalIsPlaying !== undefined ? externalIsPlaying : isPlaying;
+  const {setAnimationUp} = useTheme();
 
   useEffect(()=>{
     setCurrentFrame(0);
@@ -36,7 +37,8 @@ const SpriteAnimation = ({
 
         // Check if animation completed
         if (nextFrame === 0 && !loop) {
-          clearInterval(intervalId);
+          setAnimationUp(false);
+            clearInterval(intervalId);
           setIsPlaying(false);
           if (onComplete) onComplete();
           return prevFrame;
@@ -75,8 +77,10 @@ const SpriteAnimation = ({
       backgroundRepeat: 'no-repeat',
       backgroundSize,
       imageRendering: 'pixelated',
-      zIndex: 10,
-      // position: 'absolute',
+      zIndex: 0,
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
       transform,
       objectFit: 'none',
     };
@@ -98,198 +102,190 @@ const SpriteAnimation = ({
   );
 };
 
-import { idleShinobi, attackShinobi } from '../../assets/Shinobi/All.jsx';
-import { idleMage, attackMage } from '../../assets/Lightning_Image/All.jsx';
-import { idleDemon, attackDemon } from '../../assets/Demon/All.jsx';
-import { idleKnight, attackKnight } from '../../assets/Knight/All.jsx';
-import { idleWizard, attackWizard } from '../../assets/Wizard/All.jsx';
+// import { idleShinobi, attackShinobi } from '../../assets/Shinobi/All.jsx';
+// import { idleMage, attackMage } from '../../assets/Lightning_Image/All.jsx';
+// import { idleDemon, attackDemon } from '../../assets/Demon/All.jsx';
+// import { idleKnight, attackKnight } from '../../assets/Knight/All.jsx';
+// import { idleWizard, attackWizard } from '../../assets/Wizard/All.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
-import { rabbit } from '../../assets/Rabbit/All.jsx'; // Importing Rabbit sprite
+// import { rabbit } from '../../assets/Rabbit/All.jsx'; // Importing Rabbit sprite
 
 // Usage example component
-const SpriteDemo = ({character:characterSelected=null,move=null,scale:scaleTo}) => {
-  const {triggerAttack,loop,setLoop,currentAnimation,setCurrentAnimation,isPlaying,setIsPlaying,setAnimationUp,currCharacter,setCurrCharacter} = useTheme();
-
+const SpriteDemo = ({move=null,pack=null,scale:scaleTo,loop=true}) => {
+  const {triggerAttack,currentAnimation,setCurrentAnimation,isPlaying,setIsPlaying,setAnimationUp,currCharacter,setCurrCharacter} = useTheme();
+  
   // Example sprite data - you would replace these with your actual sprites
-  const animations = {
-    characters: {
-      Rabbit: {
-        translateY: '50%',
-        scale: 2,
-        idle: {
-          spriteSheet: rabbit,
-          frameWidth: 128,
-          frameHeight: 128,
-          frameCount: 20,
-          direction: 'vertical',
-          fps: 12
-        },
-        attack_1: {
-          spriteSheet: rabbit,
-          frameWidth: 128,
-          frameHeight: 128,
-          frameCount: 20,
-          direction: 'vertical',
-          fps: 12,
-        },
-      },
-      Shinobi: {
-        translateX: '-10%',
-        scale: 3,
-        idle: {
-          spriteSheet: idleShinobi,
-          frameWidth: 95,
-          frameHeight: 80,
-          frameCount: 6,
-          direction: 'vertical',
-          fps: 8
-        },
-        attack_1: {
-          spriteSheet: attackShinobi,
-          frameWidth: 95,
-          frameHeight: 80,
-          frameCount: 5,
-          direction: 'vertical',
-          fps: 5,
-        },
-      },
-      Mage: {
-        translateX: '-30%',
-        scale: 4,
-        idle: {
-          spriteSheet: idleMage,
-          frameWidth: 128,
-          frameHeight: 86,
-          frameCount: 7,
-          direction: 'vertical',
-          fps: 8
-        },
-        attack_1: {
-          spriteSheet: attackMage,
-          frameWidth: 128,
-          frameHeight: 86,
-          frameCount: 10,
-          direction: 'vertical',
-          fps: 10,
-        },
-      },
-      Demon: {
-        translateX: '10%',
-        scale: 3,
-        flipped: true,
-        idle: {
-          spriteSheet: idleDemon,
-          frameWidth: 182,
-          frameHeight: 118,
-          frameCount: 6,
-          direction: 'vertical',
-          fps: 8
-        },
-        attack_1: {
-          spriteSheet: attackDemon,
-          frameWidth: 182,
-          frameHeight: 118,
-          frameCount: 15,
-          direction: 'vertical',
-          fps: 8
-        },
-      },
-      Knight: {
-        translateX: '30%',
-        translateY: '40%',
-        scale: 3,
-        idle: {
-          spriteSheet: idleKnight,
-          frameWidth: 80,
-          frameHeight: 95,
-          frameCount: 15,
-          direction: 'vertical',
-          fps: 8
-        },
-        attack_1: {
-          spriteSheet: attackKnight,
-          frameWidth: 80,
-          frameHeight: 95,
-          frameCount: 16,
-          direction: 'vertical',
-          fps: 10
-        },
-      },
-      Wizard: {
-        translateX: '15%',
-        translateY: '50%',
-        scale: 3,
-        idle: {
-          spriteSheet: idleWizard,
-          frameWidth: 150,
-          frameHeight: 80,
-          frameCount: 6,
-          direction: 'vertical',
-          fps: 6
-        },
-        attack_1: {
-          spriteSheet: attackWizard,
-          frameWidth: 150,
-          frameHeight: 80,
-          frameCount: 9,
-          direction: 'vertical',
-          fps: 6
-        },
-      }
-    }
-  };
-
+  // const animations = {
+  //   characters: {
+  //     Rabbit: {
+  //       translateY: '50%',
+  //       scale: 2,
+  //       idle: {
+  //         spriteSheet: rabbit,
+  //         frameWidth: 128,
+  //         frameHeight: 128,
+  //         frameCount: 20,
+  //         direction: 'vertical',
+  //         fps: 12
+  //       }, 
+  //       attack_1: {
+  //         spriteSheet: rabbit,
+  //         frameWidth: 128,
+  //         frameHeight: 128,
+  //         frameCount: 20,
+  //         direction: 'vertical',
+  //         fps: 12,
+  //       },
+  //     },
+  //     Shinobi: {
+  //       translateX: '-10%',
+  //       scale: 3,
+  //       idle: {
+  //         spriteSheet: idleShinobi,
+  //         frameWidth: 95,
+  //         frameHeight: 80,
+  //         frameCount: 6,
+  //         direction: 'vertical',
+  //         fps: 8
+  //       },
+  //       attack_1: {
+  //         spriteSheet: attackShinobi,
+  //         frameWidth: 95,
+  //         frameHeight: 80,
+  //         frameCount: 5,
+  //         direction: 'vertical',
+  //         fps: 5,
+  //       },
+  //     },
+  //     Mage: {
+  //       translateX: '-30%',
+  //       scale: 4,
+  //       idle: {
+  //         spriteSheet: idleMage,
+  //         frameWidth: 128,
+  //         frameHeight: 86,
+  //         frameCount: 7,
+  //         direction: 'vertical',
+  //         fps: 8
+  //       },
+  //       attack_1: {
+  //         spriteSheet: attackMage,
+  //         frameWidth: 128,
+  //         frameHeight: 86,
+  //         frameCount: 10,
+  //         direction: 'vertical',
+  //         fps: 10,
+  //       },
+  //     },
+  //     Demon: {
+  //       translateX: '10%',
+  //       scale: 3,
+  //       flipped: true,
+  //       idle: {
+  //         spriteSheet: idleDemon,
+  //         frameWidth: 182,
+  //         frameHeight: 118,
+  //         frameCount: 6,
+  //         direction: 'vertical',
+  //         fps: 8
+  //       },
+  //       attack_1: {
+  //         spriteSheet: attackDemon,
+  //         frameWidth: 182,
+  //         frameHeight: 118,
+  //         frameCount: 15,
+  //         direction: 'vertical',
+  //         fps: 8
+  //       },
+  //     },
+  //     Knight: {
+  //       translateX: '30%',
+  //       translateY: '40%',
+  //       scale: 3,
+  //       idle: {
+  //         spriteSheet: idleKnight,
+  //         frameWidth: 80,
+  //         frameHeight: 95,
+  //         frameCount: 15,
+  //         direction: 'vertical',
+  //         fps: 8
+  //       },
+  //       attack_1: {
+  //         spriteSheet: attackKnight,
+  //         frameWidth: 80,
+  //         frameHeight: 95,
+  //         frameCount: 16,
+  //         direction: 'vertical',
+  //         fps: 10
+  //       },
+  //     },
+  //     Wizard: {
+  //       translateX: '15%',
+  //       translateY: '50%',
+  //       scale: 3,
+  //       idle: {
+  //         spriteSheet: idleWizard,
+  //         frameWidth: 150,
+  //         frameHeight: 80,
+  //         frameCount: 6,
+  //         direction: 'vertical',
+  //         fps: 6
+  //       },
+  //       attack_1: {
+  //         spriteSheet: attackWizard,
+  //         frameWidth: 150,
+  //         frameHeight: 80,
+  //         frameCount: 9,
+  //         direction: 'vertical',
+  //         fps: 6
+  //       },
+  //     }
+  //   }
+  // };
   const backToIdle = () => {
     setCurrentAnimation('idle');
-    setLoop(true);
     setIsPlaying(true);
-    setAnimationUp(false);
+    setAnimationUp(false);  
     return;
   }
-  const characterChosen = characterSelected || currCharacter;
+  const characterChosen = (pack!=null && pack.length === 1) ? pack[0].title : currCharacter;
   const moveChosen = move || currentAnimation;
   // Get the current animation data from the animations object
-  const { spriteSheet, frameWidth, frameHeight, frameCount, fps, row = 0, direction } = animations.characters[characterChosen][moveChosen] || {};
-
+  const { sprite, frameWidth, frameHeight, frames, fps } = pack?.filter(p=> p.title === characterChosen)[0].pack[moveChosen] || {};
+  console.log("filtered",pack?.filter(p=> p.title === characterChosen)[0].pack[moveChosen]);
+  if (!sprite) {
+    console.warn(`No sprite found for character "${characterChosen}" and move "${moveChosen}"`);
+    return null; // If no sprite is found, return null
+  }
   // Get character properties with defaults
-  const { total_frames = frameCount, flipped } = animations.characters[characterChosen] || {};
-  let translateX = characterSelected ? '0' : animations.characters[characterChosen].translateX || '0';
-  let translateY = characterSelected ? '0' : animations.characters[characterChosen].translateY || '0';
-  let scale = animations.characters[characterChosen].scale ;
+  let scale = pack?.filter(p=> p.title === characterChosen)[0].scale || 1;
   if(scaleTo) {
     scale = scaleTo;
   }
-  console.log(translateX)
 
-  const allCharacters = ['Demon','Wizard','Rabbit'];
+  const allCharacters = pack?.map(p => p.title);
 
   return (
     <div className='flex flex-col justify-between h-full gap-4 py-3 pl-2'>
 
-      <div className='relative h-full'>
-        {spriteSheet && (
+      <div className='h-9/12 relative'>
+        {sprite && (
           <SpriteAnimation
-            spriteSheet={spriteSheet}
+            spriteSheet={sprite}
             frameWidth={frameWidth}
             frameHeight={frameHeight}
-            frameCount={frameCount}
+            frameCount={frames}
             fps={fps}
-            loop={loop}
             scale={scale}
             className=""
             onComplete={backToIdle}
-            translateX={translateX}
-            translateY={translateY}
-            row={row}
-            total_frames={total_frames}
-            flipped={flipped}
-            direction={direction}
+            loop={loop}
           />
         )}
       </div>
-      {!characterSelected && (
-        <div className='flex flex-row flex-wrap gap-2 items-center'>
-          {allCharacters.map(chars => (
+      {(pack!=null && pack.length > 1) && (
+        <div className='h-3/12 flex flex-row flex-wrap gap-2 items-center'>
+          {allCharacters?.map(chars => (
             <button
               className={`p-2 rounded-full ${currCharacter === chars ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
               key={chars}

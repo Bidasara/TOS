@@ -27,6 +27,16 @@
   background: #a0a0a0;
 }
 
+/* Hide scrollbars globally */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* WebKit browsers */
+}
+
 /* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-track {
   background: #2d3748;
@@ -87,6 +97,11 @@ input[type="checkbox"]:checked::after {
 }
 
 /* Add responsive font sizes */
+html, body, #root {
+  height: 100%; /* Ensures full height from the viewport down */
+  margin: 0;
+  padding: 0;
+}
 html {
   font-size: 16px;
 }
@@ -132,3 +147,49 @@ body {
 .cyberpunk-scrollbar::-webkit-scrollbar { width: 8px; background: #0ff; }
 .cyberpunk-scrollbar::-webkit-scrollbar-thumb { background: #ff00cc; border-radius: 8px; box-shadow: 0 0 8px #ff00cc, 0 0 16px #00fff7; }
 .cyberpunk-scrollbar { scrollbar-width: thin; scrollbar-color: #ff00cc #0ff; }
+
+/* Delete Icon Hover Effects */
+.delete-icon {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.delete-icon:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+/* Dark mode delete icon hover */
+.dark .delete-icon:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+/* Cyberpunk theme delete icon hover */
+.cyberpunk .delete-icon {
+  color: #00fff7;
+  text-shadow: 0 0 8px #00fff7;
+}
+
+.cyberpunk .delete-icon:hover {
+  background-color: rgba(255, 0, 204, 0.3);
+  color: #ff00cc;
+  text-shadow: 0 0 12px #ff00cc, 0 0 20px #ff00cc;
+  box-shadow: 0 0 8px #ff00cc, 0 0 16px #00fff7;
+}
+
+/* TOS theme delete icon hover */
+.tos .delete-icon {
+  color: #ff6b6b;
+  transition: all 0.2s ease-in-out;
+}
+
+.tos .delete-icon:hover {
+  background-color: rgba(255, 107, 107, 0.2);
+  color: #ff5252;
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+}
