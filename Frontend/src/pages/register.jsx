@@ -105,11 +105,6 @@ const Register = (props) => {
             uploadData.append("avatarLink", selectedAvatar.src);
         }
 
-        // Debug logs
-        console.log("Sending FormData:");
-        for (let [key, value] of uploadData.entries()) {
-            console.log(key, value);
-        }
 
         try {
             const response = await api.post("/auth/register", uploadData, {
@@ -118,7 +113,6 @@ const Register = (props) => {
                     "Content-Type": "multipart/form-data"
                 }
             });
-            console.log(response)
             const { accessToken, user } = response.data.data;
             setAccessToken(accessToken);
             setUsername(user.username);

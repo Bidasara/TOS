@@ -4,7 +4,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import Scroll from '../common/Scroll.jsx';
 import Problem from './Problem.jsx'
 
-const Category = ({ item: category, elevate: elevatedCategory, open: openCategory }) => {
+const Category = ({ handleClick, item: category, elevate: elevatedCategory, open: openCategory }) => {
     const { currentList, deleteCategory, data,addProblem,setFunc,setModalTitle,setModalExtra,setModalOpen,setInputId,setInputLabel,setInputPlaceHolder,setInputType, elevatedProblem, setElevatedProblem } = useProblemContext();
     const handleAdd = () =>{
         setModalTitle("Add Problem");
@@ -33,6 +33,7 @@ const Category = ({ item: category, elevate: elevatedCategory, open: openCategor
     return (
         <>
             <div
+            onClick={()=>handleClick(category)}
                 className={`px-4 rounded-lg cursor-pointer ${(openCategory && openCategory != "") ? "h-1/5" : "h-full"} font-medium flex justify-between items-center transition-all duration-200 shadow-sm
                 ${theme === 'cyberpunk'
                         ? `${elevatedCategory && category._id === elevatedCategory

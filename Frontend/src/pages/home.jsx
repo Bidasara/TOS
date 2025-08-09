@@ -1,7 +1,7 @@
 import Animation from '../components/Animation'
 import Dolist from '../components/Dolist'
 import Options from '../components/Options'
-import { ProblemProvider, useProblemContext } from '../contexts/ProblemContext'
+import { useProblemContext } from '../contexts/ProblemContext'
 import { useTheme } from '../contexts/ThemeContext'
 import NoteModal from '../components/common/Notes.jsx'
 import Modal from '../components/common/Modal.jsx'
@@ -9,16 +9,18 @@ import Input from '../components/common/Input.jsx'
 import { useEffect } from 'react'
 import api from '../api'
 import { getAccessToken } from '../authToken'
+import { useNotification } from '../contexts/NotificationContext.jsx'
 
 function Home() {
   return (
-      <ProblemProvider>
+      // <ProblemProvider>
         <HomeContent />
-      </ProblemProvider>
+      // {/* </ProblemProvider> */}
   )
 }
 
 function HomeContent() {
+  const {showNotification} = useNotification();
   const { theme, toggleTheme } = useTheme();
   const { 
     noteModalOpen, setNoteModalOpen, noteModalContent ,modalTitle,modalOpen,onModalClose,
@@ -34,7 +36,7 @@ function HomeContent() {
       try {
         const token = getAccessToken();
         if (!token) return;
-        
+
         const response = await api.get('/animation/anim', {
           headers: {
             Authorization: `Bearer ${token}`
@@ -52,6 +54,7 @@ function HomeContent() {
 
     fetchUserAnimations();
   }, []); // Run on each render
+  
 
   return (
     <div className={`h-9/10 w-full flex flex-col flex-1 transition-colors duration-300 min-h-0 overflow-x-hidden
@@ -67,18 +70,7 @@ function HomeContent() {
           title={modalTitle}
           onSubmit={currFunc}
           extra ={modalExtra}
-        >
-          <Input
-            label={inputLabel}
-            id={inputId}
-            type={inputType}
-            placeholder={inputPlaceHolder}
-            value={inputText}
-            onChange={onChange}
-            onKeyDown={e => { if (e.key === 'Enter') currFunc}}
-            extra = {modalExtra}
-          />
-        </Modal> {/* Common Modal and Input */}
+        />
         <Dolist/>
         <Options/>
       </div>

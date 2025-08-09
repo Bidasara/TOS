@@ -5,35 +5,36 @@ import { animationPacks } from "./db/animations.js";
 
 export const insertQuestions = async () => { 
   try {
-    const problems = await Problem.find();
-    if (problems.length > 0) {
-      console.log("Questions already exist in the database. Skipping insertion.");
-      return;
+      const operations = ques.map(question=>({
+        updateOne: {
+          filter: {title: question.title},
+          update: {$set: question},
+          upsert: true,
+        }
+      }))
+      const result = await Problem.bulkWrite(operations);
+      console.log("✅ Problem sync complete!");
+    console.log(`${result.upsertedCount} animations inserted.`);
+    console.log(`${result.modifiedCount} animations updated.`); 
+    } catch (error) {
+      console.error("Error inserting/updating animations:", error);
     }
-    // Delete existing data (optional)
-    await Problem.deleteMany({});  
-    
-    // Insert new data
-    const result = await Problem.insertMany(ques);
-    console.log(`${result.length} questions inserted successfully!`);
-  } catch (error) {
-    console.error("Error inserting questions:", error);
-  }
 };
 
 export const insertAnimations = async () => {
   try {
-    const animations = await Animation.find();
-    if (animations.length > 0) {
-      console.log("Animations already exist in the database. Skipping insertion.");
-      return;
-    }
+      const operations = animationPacks.map(animation=>({
+        updateOne: {
+          filter: {title: animation.title},
+          update: {$set: animation},
+          upsert: true,
+        }
+      }))
+      const result = await Animation.bulkWrite(operations);
+      console.log("✅ Animation sync complete!");
+    console.log(`${result.upsertedCount} animations inserted.`);
+    console.log(`${result.modifiedCount} animations updated.`); 
     } catch (error) {
-      console.error("Error inserting animations:", error);
+      console.error("Error inserting/updating animations:", error);
     }
-    // Delete existing data (optional)
-    await Animation.deleteMany({});
-    // Insert new data
-    const result = await Animation.insertMany(animationPacks);
-    console.log(`${result.length} animations inserted successfully!`);
 }

@@ -62,15 +62,12 @@ const getAllAnimationPacksForUserId = asyncHandler(async (req, res) => {
     .lean();
 
     if (!activePurchases || activePurchases.length === 0) {
-        throw new ApiError(404, 'No active purchases found for this user');
+        return res.status(205).json(new ApiResponse(205,[],'No user purchases'));
     }
 
     const animationIds = activePurchases.map(purchase => purchase.animation);
 
     const animations = await Animation.find({ _id: { $in: animationIds } }).select('-createdAt -updatedAt');
-    if (!animations || animations.length === 0) {
-        throw new ApiError(404, 'No animations found of this animation IDs');
-    }
 
     return res.status(200).json(new ApiResponse(200, animations, 'Animations retrieved successfully'));
 })

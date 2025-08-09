@@ -17,8 +17,8 @@ export async function seedRecommendedLists() {
   const existing = await List.find({ byAdmin: true });
   if (existing.length > 0) {
     console.log("Recommended lists already exist, skipping seeding."); 
-    return;  
-  }
+    return;
+  } 
 
   // Fetch all problems once
   const allProblems = await Problem.find().sort({ num: 1 });

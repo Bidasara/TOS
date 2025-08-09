@@ -4,7 +4,7 @@ import { authenticateJWT, requireRole } from '../middlewares/auth.middleware.js'
 
 const router = express.Router();
 
-router.get('/dashboard/:username', userController.getUserDashboard);
+router.get('/dashboard/:username', userController.getUserDashboard); 
 
 router.use(authenticateJWT);
 router.patch('/profile',authenticateJWT,userController.updateCurrentUserProfile);

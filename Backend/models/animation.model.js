@@ -78,6 +78,9 @@ const animationSchema = mongoose.Schema({
             fps: {
                 type: Number,
                 required: true
+            },
+            delay: {
+                type: Number,
             }
         }
     },
@@ -86,6 +89,10 @@ const animationSchema = mongoose.Schema({
         required: true,
         default: 0,
         min: 0
+    },
+    icon: {
+        type: String,
+        required: true,
     }
 })
 

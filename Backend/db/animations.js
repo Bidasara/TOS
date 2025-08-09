@@ -21,36 +21,38 @@ export const animationPacks = [
                 sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753469049/fire_wkhtcp.png",
                 frames: 72,
                 frameWidth: 320,
-                frameHeight: 230,
+                frameHeight: 230, 
                 fps: 12,
             }
         },
-        price: 50
+        price: 50,
+        icon: "https://res.cloudinary.com/harshitbd/image/upload/v1754592360/New_Piskel_5_oclwjv.png"
     },
     {
         title: "Wizard",
-        scale: 3,
+        scale: 3.5,
         pack: {
             idle: {
-                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753468899/idle_ypday0.png",
+                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1754485473/image_11_vxhuok.png",
                 frames: 6,
-                frameWidth: 150,
+                frameWidth: 80,
                 frameHeight: 80,
                 fps: 6,
             },
             attack: {
-                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753468899/attack_wu0qoa.png",
+                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1754485474/image_10_ibtbh8.png",
                 frames: 9,
-                frameWidth: 150,
+                frameWidth: 160,
                 frameHeight: 80,
                 fps: 6,
             },
             break: {
-                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753546135/image_7_jge2jo.png",
-                frames: 10,
+                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1754485899/image_13_w6eypq.png",
+                frames: 21,
                 frameWidth: 82,
                 frameHeight: 19,
-                fps: 6,
+                fps: 12,
+                delay: 2000
             }
         }
     },
@@ -59,25 +61,25 @@ export const animationPacks = [
         scale: 2,
         pack: {
             idle: {
-                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753541179/image_6_bjx1qs.png",
+                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753715242/image_6_1_g4rplm.png",
                 frames: 20,
                 frameWidth: 128,
                 frameHeight: 128,
                 fps: 12,
             },
             attack: {
-                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753541179/image_6_bjx1qs.png",
-                frames: 20,
-                frameWidth: 128,
+                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1754309240/image_9_cytepw.png",
+                frames: 24,
+                frameWidth: 180,
                 frameHeight: 128,
                 fps: 12,
             },
             break: {
-                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1753468887/rabbit_ppphxt.png",
-                frames: 20,
-                frameWidth: 128,
-                frameHeight: 128,
-                fps: 12,
+                sprite: "https://res.cloudinary.com/harshitbd/image/upload/v1754489023/image_14_ivtqnk.png",
+                frames: 24,
+                frameWidth: 82,
+                frameHeight: 19,
+                fps: 10,
             }
         }
     }

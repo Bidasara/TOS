@@ -147,6 +147,29 @@ body {
 .cyberpunk-scrollbar::-webkit-scrollbar { width: 8px; background: #0ff; }
 .cyberpunk-scrollbar::-webkit-scrollbar-thumb { background: #ff00cc; border-radius: 8px; box-shadow: 0 0 8px #ff00cc, 0 0 16px #00fff7; }
 .cyberpunk-scrollbar { scrollbar-width: thin; scrollbar-color: #ff00cc #0ff; }
+.scrollbar::-webkit-scrollbar {
+    width: 12px; /* Increased width for better visibility */
+    background: #f0f0f0; /* Light grey background for the track */
+    border-radius: 6px; /* Slightly rounded corners for the track */
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+    background: #888888; /* Medium grey for the thumb */
+    border-radius: 8px; /* More rounded corners for the thumb */
+    /* Subtle shadow for depth */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* On hover, make the thumb slightly darker */
+.scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555555; /* Darker grey on hover */
+}
+
+/* For Firefox */
+.scrollbar {
+    scrollbar-width: thin; /* Makes the scrollbar thinner */
+    scrollbar-color: #888888 #f0f0f0; /* Thumb color then track color */
+}
 
 /* Delete Icon Hover Effects */
 .delete-icon {

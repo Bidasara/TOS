@@ -6,7 +6,7 @@ import api from "../api";
 import { useTheme } from '../contexts/ThemeContext';
 
 const Navbar = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const { accessToken, setAccessToken, username, setUsername, avatarLink, setAvatarLink, loading, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef();
@@ -38,11 +38,17 @@ const Navbar = () => {
           (<></>) : accessToken != null ? (
             <>
               {/* Shop Link */}
-              <div onClick={() => navigate("/shop")} className={theme === 'tos' ? 'tos-accent cursor-pointer' : ''}>Shop</div>
+              <button onClick={() => navigate("/shop")} className={theme === 'tos' ? 'tos-accent cursor-pointer' : 'cursor-pointer focus:outline-none'}>Shop</button>
+              <button onClick={()=> navigate('/library')} className='rounded-lg'>Library</button>
+              <button onClick={()=> navigate(`/user/${username}`)} className="cursor-pointer">Dashboard</button>
+              <svg xmlns="http://www.w3.org/2000/svg" className='h-1/3' viewBox="0 0 24 24" fill="yellow" stroke="grey" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
               <div className="relative ml-2">
                 <button
                   onClick={() => setDropdownOpen(prev => !prev)}
-                  className={`flex items-center gap-2 focus:outline-none px-2 py-1 rounded-lg transition-all ${theme === 'tos' ? 'tos-border tos-theme-mono' : 'focus:ring-2 focus:ring-indigo-400 dark:focus:ring-pink-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                  className={`flex items-center cursor-pointer gap-2 focus:outline-none px-2 py-1 rounded-lg transition-all ${theme === 'tos' ? 'tos-border tos-theme-mono' : 'focus:ring-2 focus:ring-indigo-400 dark:focus:ring-pink-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 >
                   <img src={avatarLink} alt="Avatar" className={`h-9 w-9 rounded-full border-2 ${theme === 'tos' ? 'tos-border' : 'border-indigo-400 dark:border-pink-400'} shadow`} />
                   <span className={`text-xs ${theme === 'tos' ? 'tos-accent' : 'text-gray-600 dark:text-gray-300'}`}>▼</span>
@@ -53,7 +59,7 @@ const Navbar = () => {
                     <div className={`font-semibold text-lg mb-4 text-center ${theme === 'tos' ? 'tos-accent' : ''}`}>{username}</div>
                     <button
                       onClick={logout}
-                      className={`w-full py-2 rounded-lg font-medium transition shadow ${theme === 'tos' ? 'tos-border tos-accent' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+                      className={`w-full py-2 cursor-pointer rounded-lg font-medium transition shadow ${theme === 'tos' ? 'tos-border tos-accent' : 'bg-red-500 hover:bg-red-600 text-white'}`}
                     >
                       Logout
                     </button>
@@ -63,7 +69,7 @@ const Navbar = () => {
             </>
           ) : (
             <button
-              className={`ml-4 px-5 py-2 rounded-lg font-semibold text-base transition-all shadow-sm ${theme === 'tos' ? 'tos-border tos-accent tos-theme-mono' : 'bg-indigo-600 text-white hover:bg-indigo-700'} ${theme === 'cyberpunk' ? 'bg-pink-500 dark:bg-pink-400 dark:text-white' : ''}`}
+              className={`ml-4 px-5 py-2 rounded-lg font-semibold text-base transition-all cursor-pointer shadow-sm ${theme === 'tos' ? 'tos-border tos-accent tos-theme-mono' : 'bg-indigo-600 text-white hover:bg-indigo-700'} ${theme === 'cyberpunk' ? 'bg-pink-500 dark:bg-pink-400 dark:text-white' : ''}`}
               onClick={login}
             >
               Sign In / Log In

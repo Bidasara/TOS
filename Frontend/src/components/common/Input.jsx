@@ -8,7 +8,7 @@ const Input = ({
   value,
   onChange,
   onKeyDown,
-  autoFocus = false,
+  autoFocus = true,
   fullWidth = false,
   extra
 }) => {

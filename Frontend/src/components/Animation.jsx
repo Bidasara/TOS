@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'; // Import useState and useCallback
 import SpriteDemo from './AnimationPart/SpriteAnimation';
+import { useSpriteAnimation } from '../contexts/SpriteAnimationContext';
 import { useTheme } from '../contexts/ThemeContext';
 import api from '../api';
 import { getAccessToken } from '../authToken';
@@ -10,62 +11,76 @@ const Animation = () => {
   const [loading, setLoading] = useState(true); // State for loading status
   const [error, setError] = useState(null); // State for error messages
 
-  const { theme, animationUp, setCurrCharacter } = useTheme();
+  const { loop, setCurrCharacter } = useSpriteAnimation();
+  const { theme } = useTheme();
 
   // Use useCallback to memoize the data fetching function
   const fetchAnimationData = useCallback(async () => {
-    setLoading(true); // Start loading
-    setError(null); // Clear previous errors
+    setLoading(true);
+    setError(null);
 
     try {
-      // Try to load user-specific animations from localStorage first
       const storedUserAnimations = localStorage.getItem('userAnimations');
-      if (storedUserAnimations) {
-        const parsedUserAnimations = JSON.parse(storedUserAnimations);
-        if (parsedUserAnimations && parsedUserAnimations.length > 0) {
-          setAnimationPacks(parsedUserAnimations);
-          setCurrCharacter(parsedUserAnimations[0].title);
-          setLoading(false); // Done loading if found in localStorage
-          return; // Exit early if data is found locally
-        }
-      }
-
-      // Fallback: If no user animations, try to load from general animationPacks
       const storedPacks = localStorage.getItem('animationPacks');
-      if (storedPacks) {
+
+      // If both are found in localStorage, use them and exit the function early.
+      if (storedUserAnimations && storedPacks) {
+        const parsedUserAnimations = JSON.parse(storedUserAnimations);
         const parsedPacks = JSON.parse(storedPacks);
+
+        setAnimationPacks([...parsedUserAnimations, ...parsedPacks]);
         if (parsedPacks && parsedPacks.length > 0) {
-          setAnimationPacks(parsedPacks);
           setCurrCharacter(parsedPacks[0].title);
-          setLoading(false); // Done loading if found in localStorage
-          return; // Exit early if data is found locally
         }
+        const allAnimations = [...parsedUserAnimations,...parsedPacks];
+        localStorage.setItem('allAnimations',JSON.stringify(allAnimations));
+        setLoading(false);
+        return; // Exit the function here
       }
 
-      // If not in localStorage, fetch from API (fallback)
-      const response = await api.get('/animation/anim', {
+      // If localStorage is empty, proceed to fetch data from the API
+      const response1 = await api.get('/animation/anim', {
         headers: {
           Authorization: `Bearer ${getAccessToken()}`
         }
       });
-      const fetchedPacks = response.data.data;
-      localStorage.setItem('animationPacks', JSON.stringify(fetchedPacks));
-      setAnimationPacks(fetchedPacks); // Update state with fetched data
-      if (fetchedPacks && fetchedPacks.length > 0) {
-        setCurrCharacter(fetchedPacks[0].title);
+      const userAnimations = response1.data.data;
+      if(userAnimations != [] && userAnimations!= undefined)
+      localStorage.setItem('userAnimations', JSON.stringify(userAnimations));
+
+      const response2 = await api.get('/animation/allAnim', {
+        headers: {
+          Authorization: `Bearer ${getAccessToken()}`
+        }
+      });
+      const generalAnimations = response2.data.data;
+      localStorage.setItem('animationPacks', JSON.stringify(generalAnimations));
+
+      // Set the character title after fetching
+      if (generalAnimations && generalAnimations.length > 0) {
+        setCurrCharacter(generalAnimations[0].title);
       }
+      if(userAnimations!=[] && userAnimations!=undefined){
+        localStorage.setItem('allAnimations',JSON.stringify([...userAnimations,...generalAnimations]));
+        setAnimationPacks([...userAnimations, ...generalAnimations]);
+      }
+      else {
+        localStorage.setItem('allAnimations',JSON.stringify(generalAnimations));
+        setAnimationPacks(generalAnimations);
+      }
+
     } catch (err) {
       console.error("Error fetching animation packs:", err);
-      setError("Failed to load animations. Please try again later."); // Set error message
+      setError("Failed to load animations. Please try again later.");
     } finally {
-      setLoading(false); // End loading, regardless of success or failure
+      setLoading(false);
     }
   }, [setCurrCharacter]); // Dependency: setCurrCharacter from context
 
   // useEffect to call the data fetching function on component mount
   useEffect(() => {
     fetchAnimationData();
-  }, [fetchAnimationData]); // Dependency array: run when fetchAnimationData changes (which is only on mount due to useCallback)
+  }, [fetchAnimationData]);
 
   // --- Render based on loading/error states ---
   if (loading) {
@@ -97,11 +112,10 @@ const Animation = () => {
   }
 
   // Render SpriteDemo only when animationPacks is loaded and not empty
-  // w-1/4 h-[calc(100% - 8px)] m-2 rounded-xl p-4 shadow-lg transition-all duration-300
   return (
     <div className={` h-full w-1/4 rounded-xl transition-all duration-300
-      ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'} ${animationUp ? 'z-50' : 'z-1'}`}>
-      <SpriteDemo loop={animationUp?false:true} pack={animationPacks} />
+      ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'} ${loop ? 'z-1' : 'z-50'}`}>
+      <SpriteDemo loop={loop} pack={animationPacks} />
     </div>
   );
 };

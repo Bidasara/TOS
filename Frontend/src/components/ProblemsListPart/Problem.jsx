@@ -18,12 +18,10 @@ const Problem = ({ item:problem,elevate:elevatedProblem }) => {
     }, [problem.solved, problem.notes, problem.revised]);
 
     //Functions
-    const handleChange = (e, listId, categoryId, problemId, initialText) => {
+    const handleChange = (e, listId, categoryId, problemId, initialText,hint) => {
         if (checked) return;
         const isChecked = e.target.checked;
-        // Ask if user wants to add to revision list
-        const addToRevise = window.confirm("Do you want to add this problem to your revision list for spaced repetition?");
-        setNoteModalContent({ problemId, initialText, listId, categoryId, addToRevise });
+        setNoteModalContent({ problemId, initialText, listId, categoryId ,hints:hint});
         setNoteModalOpen(true);
     };
 
@@ -90,7 +88,7 @@ const Problem = ({ item:problem,elevate:elevatedProblem }) => {
                 <Checkbox
                     id={`problem-${problem._id}`}
                     checked={checked}
-                    onChange={(e) => handleChange(e, currentList._id, openCategory, problem._id, problem.notes)}
+                    onChange={(e) => handleChange(e, currentList._id, openCategory, problem._id, problem.notes,problem.problemId.hint)}
                 />
                 <div className="min-w-0 flex-1">
                     <div className={`text-sm font-medium truncate ${checked
@@ -108,13 +106,12 @@ const Problem = ({ item:problem,elevate:elevatedProblem }) => {
             <div className="flex items-center gap-2">
                 <div
                     className={`text-xs px-2 py-1 rounded transition-colors border ${problem.revised ? (theme === 'cyberpunk' ? 'bg-pink-700 text-pink-200 border-pink-400 neon-text' : 'bg-blue-200 text-blue-800 border-blue-400 dark:bg-blue-900/40 dark:text-blue-200') : (theme === 'cyberpunk' ? 'bg-black text-cyan-400 border-cyan-400 neon-text' : 'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700/40 dark:text-gray-300')}`}
-                    title="Toggle Revised"
                 >
                     {problem.revised ? 'Revised' : 'Revise'}
                 </div>
-                <button
+                {/* <button
                     onClick={() => {
-                        setNoteModalContent({ problemId: problem._id, initialText: problem.notes, listId: currentList._id, categoryId: openCategory });
+                        setNoteModalContent({ problemId: problem._id, initialText: problem.notes, listId: currentList._id, categoryId: openCategory,hints:problem.problemId.hint});
                         setNoteModalOpen(true);
                         setElevatedProblem && setElevatedProblem(problem._id);
                     }}
@@ -124,7 +121,7 @@ const Problem = ({ item:problem,elevate:elevatedProblem }) => {
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
                     </svg>
-                </button>
+                </button> */}
                 <span onClick={(event) => handleDelete(currentList._id, openCategory,problem._id ,event)} className="material-symbols-outlined delete-icon">
                     delete
                 </span>

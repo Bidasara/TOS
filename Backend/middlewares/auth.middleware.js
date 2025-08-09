@@ -4,10 +4,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const authenticateJWT = asyncHandler( async (req, res, next) => {
     // Get auth header
-    console.log('#1')
     const authHeader = req.headers.authorization;
     const token = extractTokenFromHeader(authHeader);
-    console.log('#2')
     if (!token) 
       throw new Error(401, 'Access denied. No token provided.');
     
@@ -21,7 +19,6 @@ export const authenticateJWT = asyncHandler( async (req, res, next) => {
         message: 'Invalid or expired access token.' 
       });
     }
-    console.log('#3')
     
     // Check if user still exists in database
     const user = await User.findById(decoded.id);

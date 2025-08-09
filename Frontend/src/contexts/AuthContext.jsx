@@ -7,20 +7,20 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const [accessToken, setAccessToken] = useState(null);
-  const [username, setUsername] = useState(null);
-  const [avatarLink, setAvatarLink] = useState(null);
+  const [username, setUsername] = useState(() => localStorage.getItem("username") || null);
+  const [avatarLink, setAvatarLink] = useState(() => localStorage.getItem("avatarLink") || null);
   const [loading, setLoading] = useState(true);
   const [ATokenExpiry, setATokenExpiry] = useState(null);
   const [error, setError] = useState(null);
-  const [cart,setCart] = useState([]);
+  const [cart, setCart] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("cart",JSON.stringify(cart));
-  },[cart]);
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
   useEffect(() => {
     setLoading(true);
-  },[])
+  }, [])
 
   useEffect(() => {
     if (!accessToken) {
@@ -28,17 +28,19 @@ export const AuthProvider = ({ children }) => {
     } else {
       const isExpired = ATokenExpiry && new Date() >= new Date(ATokenExpiry);
       if (isExpired) {
+        console.log("refreshToken expired")
         refreshAccessToken();
       }
     }
-  }, [accessToken, ATokenExpiry ]);
+  }, [accessToken, ATokenExpiry]);
 
   const getCart = async () => {
     try {
-      const response = await api.get('/user/cart',{
+      const response = await api.get('/user/cart', {
         headers: {
           Authorization: `Bearer ${accessToken}`
-      }})
+        }
+      })
       console.log("Cart retrieved successfully:", response.data);
       setCart(response.data.data);
     } catch (error) {
@@ -101,28 +103,24 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const logout = () => {
-    api.post('/auth/logout', {}, { withCredentials: true })
-      .then(() => {
-        setAccessToken(null);
-        setUsername(null);
-        setAvatarLink(null);
-        localStorage.removeItem('username');
-        localStorage.removeItem('avatarLink');
-        localStorage.removeItem('userData');
-        window.dispatchEvent(new Event("user-logged-out"));
-        navigate('/login');
-      })
-      .catch(error => {
-        console.error("Logout failed:", error);
-        setAccessToken(null);
-        setUsername(null);
-        setAvatarLink(null);
-        localStorage.removeItem('username');
-        localStorage.removeItem('avatarLink');
-        localStorage.removeItem('userData');
-        window.dispatchEvent(new Event("user-logged-out"));
-      });
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout', { withCredentials: true });
+    } catch (err) {
+      console.error("Server logout failed, proceeding with client logout:", error)
+    } finally {
+      // This block runs whether the try succeeds or fails
+      setAccessToken(null);
+      setUsername(null);
+      setAvatarLink(null);
+      localStorage.clear();
+      localStorage.removeItem('username');
+      localStorage.removeItem('avatarLink');
+      localStorage.removeItem('userData');
+      // No need to dispatch a custom event if the state change handles it
+      window.dispatchEvent(new Event("user-logged-out"));
+      navigate('/login');
+    }
   };
 
   const refreshAccessToken = async () => {

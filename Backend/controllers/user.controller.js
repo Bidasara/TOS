@@ -1,7 +1,7 @@
-import {User} from '../models/user.model.js';
-import {asyncHandler} from '../utils/asyncHandler.js';
-import {ApiResponse} from '../utils/apiResponse.js';
-import {ApiError} from '../utils/apiError.js';
+import { User } from '../models/user.model.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiResponse } from '../utils/apiResponse.js';
+import { ApiError } from '../utils/apiError.js';
 import { List } from '../models/list.model.js';
 import { Animation } from '../models/animation.model.js';
 
@@ -15,41 +15,54 @@ const getUserDashboard = asyncHandler(async (req, res) => {
       { $match: { owner: user._id } },
       { $unwind: { path: '$categories', preserveNullAndEmptyArrays: true } },
       { $unwind: { path: '$categories.problems', preserveNullAndEmptyArrays: true } },
-      { $match: {
-        $or: [
-          { 'categories.problems.solved': true },
-          { 'categories.problems.revised': true }
-        ]
-      }},
-      { $group: {
-        _id: '$categories.problems.problemId',
-        solved: { $max: { $cond: ['$categories.problems.solved', 1, 0] } },
-        revised: { $max: { $cond: ['$categories.problems.revised', 1, 0] } }
-      }},
-      { $lookup: {
-        from: 'problems',
-        localField: '_id',
-        foreignField: '_id',
-        as: 'problemInfo'
-      }},
+      {
+        $match: {
+          $or: [
+            { 'categories.problems.solved': true },
+            { 'categories.problems.revised': true }
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: '$categories.problems.problemId',
+          solved: { $max: { $cond: ['$categories.problems.solved', 1, 0] } },
+          revised: { $max: { $cond: ['$categories.problems.revised', 1, 0] } }
+        }
+      },
+      {
+        $lookup: {
+          from: 'problems',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'problemInfo'
+        }
+      },
       { $unwind: '$problemInfo' },
-      { $group: {
-        _id: '$problemInfo.difficulty',
-        solvedCount: { $sum: '$solved' },
-        revisedCount: { $sum: '$revised' }
-      }}
+      {
+        $group: {
+          _id: '$problemInfo.difficulty',
+          solvedCount: { $sum: '$solved' },
+          revisedCount: { $sum: '$revised' }
+        }
+      }
     ]);
-    return res.status(200).json(new ApiResponse(200, { user, stats }, 'User dashboard retrieved successfully'));
+    const userObject = user.toObject();
+
+    delete userObject._id;
+    delete userObject.createdAt;
+    delete userObject.updatedAt;
+    return res.status(200).json(new ApiResponse(200, { user:userObject, stats }, 'User dashboard retrieved successfully'));
   } catch (error) {
     console.error(error);
     throw new ApiError(500, 'Dashboard aggregation failed');
-  }
+  }   
 });
 
 const getCart = asyncHandler(async (req, res) => {
-  const userId= req.user.id;
+  const userId = req.user.id;
   const user = await User.findById(userId).populate('cart');
-  if(!user) {
+  if (!user) {
     throw new ApiError(404, 'User not found');
   }
 
@@ -88,65 +101,65 @@ const removeFromCart = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user.cart, 'Animation removed from cart successfully'));
 });
 
-const updateCurrentUserProfile = asyncHandler( async (req, res) => {
-    const userId = req.user.id;
-    const { username } = req.body;
+const updateCurrentUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { username } = req.body;
 
-    if(!username)
+  if (!username)
     throw new ApiError(400, 'Username is required');
 
-    // Check if username or email is already taken
-    if (username) {
-      const existingUser = await User.findOne({
-        $and: [
-          { _id: { $ne: userId } },
-          { username: username }
-        ]
-      });
+  // Check if username or email is already taken
+  if (username) {
+    const existingUser = await User.findOne({
+      $and: [
+        { _id: { $ne: userId } },
+        { username: username }
+      ]
+    });
 
-      if (existingUser)
-        throw new ApiError(409, 'Username already exists');
-    }
+    if (existingUser)
+      throw new ApiError(409, 'Username already exists');
+  }
 
-    // Find and update user
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    ).select('-password -_id -role -email -lists -createdAt -updatedAt -lastRevised -passwordResetToken -passwordResetExpires -refreshToken');
+  // Find and update user
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $set: req.body },
+    { new: true, runValidators: true }
+  ).select('-password -_id -role -email -lists -createdAt -updatedAt -lastRevised -passwordResetToken -passwordResetExpires -refreshToken');
 
-    if (!user) {
-      throw new ApiError(404, 'User not found');
-    }
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
 
-    return res.status(200).json(new ApiResponse(200, user, 'User profile updated successfully'));
+  return res.status(200).json(new ApiResponse(200, user, 'User profile updated successfully'));
 });
 
-const deleteAccount = asyncHandler( async (req, res) => {
+const deleteAccount = asyncHandler(async (req, res) => {
 
-    const userId = req.user.id;
-    const { password } = req.body;
+  const userId = req.user.id;
+  const { password } = req.body;
 
-    // Validate input
-    if (!password)
+  // Validate input
+  if (!password)
     throw new ApiError(400, 'Password is required to delete account');
 
-    // Find user with password
-    const user = await User.findById(userId).select('+password');
+  // Find user with password
+  const user = await User.findById(userId).select('+password');
 
-    if (!user) 
+  if (!user)
     throw new ApiError(404, 'User not found');
 
-    // Check if password is correct
-    const isPasswordValid = await user.isPasswordCorrect(password);
+  // Check if password is correct
+  const isPasswordValid = await user.isPasswordCorrect(password);
 
-    if (!isPasswordValid)
+  if (!isPasswordValid)
     throw new ApiError(401, 'Incorrect password');
 
-    // Delete user
-    await User.findByIdAndDelete(userId);
+  // Delete user
+  await User.findByIdAndDelete(userId);
 
-    return res.status(200).json(new ApiResponse(200, null, 'User account deleted successfully'));
+  return res.status(200).json(new ApiResponse(200, null, 'User account deleted successfully'));
 });
 
 const getAllUsers = async (req, res) => {

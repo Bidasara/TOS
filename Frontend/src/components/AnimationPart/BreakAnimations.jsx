@@ -9,6 +9,7 @@ const BreakAnimation = ({
     className = '',    // Additional CSS classes
     row = 0,
     scale=1,
+    delay
 }) => {
     const [currentFrame, setCurrentFrame] = useState(0);
 
@@ -44,7 +45,6 @@ const BreakAnimation = ({
             left: 0,
         };
     };
-
     return (
         <div
             className={`${className}`}
@@ -54,14 +54,13 @@ const BreakAnimation = ({
 };
 
 // Usage example component
-const BreakDemo = ({ pack, delay=900,scale }) => {
+const BreakDemo = ({ pack,scale }) => {
     const { sprite, frameWidth, frameHeight, frames, fps } = pack.pack.break || {};
     if (!sprite) return null;
-    console.log("width:", frameWidth, "height:", frameHeight, "frames:", frames);
     return (
         <div>
             <BreakAnimation
-                delay={delay}
+                delay={pack.pack.break.delay}
                 spriteSheet={sprite}
                 frameWidth={frameWidth}
                 frameHeight={frameHeight}

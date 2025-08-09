@@ -1,258 +1,76 @@
-import { useState, useEffect } from 'react';// A reusable sprite animation component
+import { useState, useEffect } from 'react';
+
 const SpriteAnimation = ({
-  spriteSheet,       // Path to sprite sheet OR array of individual sprite paths
-  frameWidth,        // Width of each frame (if using sprite sheet)
-  frameHeight,       // Height of each frame (if using sprite sheet)
-  frameCount,        // Total number of frames
-  fps = 12,          // Frames per second (animation speed)
-  direction = 'vertical', // 'horizontal' or 'vertical' (for sprite sheets)
-  loop = true,       // Whether animation should loop
-  autoPlay = true,   // Whether animation should play automatically
-  isPlaying: externalIsPlaying, // Optional external control
-  className = '',    // Additional CSS classes
-  onComplete,        // Callback when animation completes
-  scale = 1,
-  translateX = '0',
-  translateY = '0',
-  row = 0,
-  total_frames,
-  flipped = false, // Whether to flip the sprite horizontally
+    spriteSheet,
+    frameWidth,
+    frameHeight,
+    frameCount,
+    fps = 12,
+    loop = true,
+    className = '',
+    onComplete,
+    scale = 1,
 }) => {
-  const [currentFrame, setCurrentFrame] = useState(0);
-  const {isPlaying,setIsPlaying} = useTheme();
-  // Use external control if provided
-  const playing = externalIsPlaying !== undefined ? externalIsPlaying : isPlaying;
-  const {setAnimationUp} = useTheme();
+    const [currentFrame, setCurrentFrame] = useState(0);
 
-  useEffect(()=>{
-    setCurrentFrame(0);
-  },[spriteSheet,frameCount,direction,row])
-  // Debug: log prop changes
-  useEffect(() => {
-    if (!playing) return;
+    // This effect resets the animation if the sprite itself changes
+    useEffect(() => {
+        setCurrentFrame(0);
+    }, [spriteSheet, frameCount]);
 
-    const intervalId = setInterval(() => {
-      setCurrentFrame(prevFrame => {
-        const nextFrame = (prevFrame + 1) % frameCount;
+    // This is the main animation loop effect
+    useEffect(() => {
+        // Don't start the animation if there are no frames to animate
+        if (frameCount <= 1) return;
 
-        // Check if animation completed
-        if (nextFrame === 0 && !loop) {
-          setAnimationUp(false);
-            clearInterval(intervalId);
-          setIsPlaying(false);
-          if (onComplete) onComplete();
-          return prevFrame;
-        }
+        const intervalId = setInterval(() => {
+            // We use the direct value of currentFrame, not the updater function
+            const nextFrame = (currentFrame + 1) % frameCount;
 
-        return nextFrame;
-      });
-    }, 1000 / fps);
+            // 1. First, update the child's state. This is a clean, single action.
+            setCurrentFrame(nextFrame);
+            
+            // 2. THEN, as a separate step, check if the animation just finished.
+            //    We check if the *new* frame is 0 and the animation isn't set to loop.
+            if (nextFrame === 0 && !loop) {
+                // Since this check is now outside of the state updater, it is safe to call onComplete.
+                if (onComplete) {
+                    onComplete();
+                }
+            }
+        }, 1000 / fps);
 
-    return () => clearInterval(intervalId);
-  }, [playing, frameCount, fps, loop, onComplete, spriteSheet, direction, row]);
+        // Cleanup: Stop the interval if the component unmounts or props change
+        return () => clearInterval(intervalId);
 
-  const getStyle = () => {
-    // Calculate the background position based on the current frame and row
-    const backgroundPosition = direction === 'horizontal'
-      ? `-${currentFrame * frameWidth * scale}px -${row * frameHeight * scale}px`
-      : `-${row * frameWidth * scale}px -${currentFrame * frameHeight * scale}px`;
+    // We depend on `currentFrame` now to run the interval on each new frame
+    }, [currentFrame, frameCount, fps, loop, onComplete, spriteSheet]);
 
-    const backgroundSize =
-      direction === 'horizontal'
-        // W  = frameCount × frameWidth
-        ? `${frameWidth * total_frames * scale}px`
-        // H  = frameCount × frameHeight
-        : `${frameWidth * scale}px ${frameHeight * frameCount * scale}px`;
 
-    // Combine flipping and translation in transform
-    let transform = '';
-    if (flipped) transform += 'scaleX(-1) ';
-    transform += `translateX(${translateX}) translateY(${translateY})`;
-
-    return {
-      width: `${frameWidth * scale}px`, // scaled frame width
-      height: `${frameHeight * scale}px`, // scaled frame height
-      backgroundImage: `url(${spriteSheet})`,
-      backgroundPosition,
-      backgroundRepeat: 'no-repeat',
-      backgroundSize,
-      imageRendering: 'pixelated',
-      zIndex: 0,
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      transform,
-      objectFit: 'none',
+    const style = {
+        width: `${frameWidth * scale}px`,
+        height: `${frameHeight * scale}px`,
+        backgroundImage: `url(${spriteSheet})`,
+        backgroundPosition: `0px -${currentFrame * frameHeight * scale}px`,
+        backgroundSize: `${frameWidth * scale}px ${frameHeight * frameCount * scale}px`,
+        imageRendering: 'pixelated',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
     };
-  };
 
-  const togglePlay = () => {
-    // Only allow manual control if external control is not provided
-    if (externalIsPlaying === undefined) {
-      setIsPlaying(prev => !prev);
-    }
-  };
-
-  return (
-    <div
-      className={`${className}`}
-      style={getStyle()}
-      onClick={togglePlay}
-    />
-  );
+    return <div className={className} style={style} />;
 };
 
-// import { idleShinobi, attackShinobi } from '../../assets/Shinobi/All.jsx';
-// import { idleMage, attackMage } from '../../assets/Lightning_Image/All.jsx';
-// import { idleDemon, attackDemon } from '../../assets/Demon/All.jsx';
-// import { idleKnight, attackKnight } from '../../assets/Knight/All.jsx';
-// import { idleWizard, attackWizard } from '../../assets/Wizard/All.jsx';
-import { useTheme } from '../../contexts/ThemeContext.jsx';
-// import { rabbit } from '../../assets/Rabbit/All.jsx'; // Importing Rabbit sprite
+import { useSpriteAnimation } from '../../contexts/SpriteAnimationContext.jsx';
 
-// Usage example component
 const SpriteDemo = ({move=null,pack=null,scale:scaleTo,loop=true}) => {
-  const {triggerAttack,currentAnimation,setCurrentAnimation,isPlaying,setIsPlaying,setAnimationUp,currCharacter,setCurrCharacter} = useTheme();
+  const {currentAnimation,setCurrentAnimation,currCharacter,setCurrCharacter,backToIdle} = useSpriteAnimation();
   
-  // Example sprite data - you would replace these with your actual sprites
-  // const animations = {
-  //   characters: {
-  //     Rabbit: {
-  //       translateY: '50%',
-  //       scale: 2,
-  //       idle: {
-  //         spriteSheet: rabbit,
-  //         frameWidth: 128,
-  //         frameHeight: 128,
-  //         frameCount: 20,
-  //         direction: 'vertical',
-  //         fps: 12
-  //       }, 
-  //       attack_1: {
-  //         spriteSheet: rabbit,
-  //         frameWidth: 128,
-  //         frameHeight: 128,
-  //         frameCount: 20,
-  //         direction: 'vertical',
-  //         fps: 12,
-  //       },
-  //     },
-  //     Shinobi: {
-  //       translateX: '-10%',
-  //       scale: 3,
-  //       idle: {
-  //         spriteSheet: idleShinobi,
-  //         frameWidth: 95,
-  //         frameHeight: 80,
-  //         frameCount: 6,
-  //         direction: 'vertical',
-  //         fps: 8
-  //       },
-  //       attack_1: {
-  //         spriteSheet: attackShinobi,
-  //         frameWidth: 95,
-  //         frameHeight: 80,
-  //         frameCount: 5,
-  //         direction: 'vertical',
-  //         fps: 5,
-  //       },
-  //     },
-  //     Mage: {
-  //       translateX: '-30%',
-  //       scale: 4,
-  //       idle: {
-  //         spriteSheet: idleMage,
-  //         frameWidth: 128,
-  //         frameHeight: 86,
-  //         frameCount: 7,
-  //         direction: 'vertical',
-  //         fps: 8
-  //       },
-  //       attack_1: {
-  //         spriteSheet: attackMage,
-  //         frameWidth: 128,
-  //         frameHeight: 86,
-  //         frameCount: 10,
-  //         direction: 'vertical',
-  //         fps: 10,
-  //       },
-  //     },
-  //     Demon: {
-  //       translateX: '10%',
-  //       scale: 3,
-  //       flipped: true,
-  //       idle: {
-  //         spriteSheet: idleDemon,
-  //         frameWidth: 182,
-  //         frameHeight: 118,
-  //         frameCount: 6,
-  //         direction: 'vertical',
-  //         fps: 8
-  //       },
-  //       attack_1: {
-  //         spriteSheet: attackDemon,
-  //         frameWidth: 182,
-  //         frameHeight: 118,
-  //         frameCount: 15,
-  //         direction: 'vertical',
-  //         fps: 8
-  //       },
-  //     },
-  //     Knight: {
-  //       translateX: '30%',
-  //       translateY: '40%',
-  //       scale: 3,
-  //       idle: {
-  //         spriteSheet: idleKnight,
-  //         frameWidth: 80,
-  //         frameHeight: 95,
-  //         frameCount: 15,
-  //         direction: 'vertical',
-  //         fps: 8
-  //       },
-  //       attack_1: {
-  //         spriteSheet: attackKnight,
-  //         frameWidth: 80,
-  //         frameHeight: 95,
-  //         frameCount: 16,
-  //         direction: 'vertical',
-  //         fps: 10
-  //       },
-  //     },
-  //     Wizard: {
-  //       translateX: '15%',
-  //       translateY: '50%',
-  //       scale: 3,
-  //       idle: {
-  //         spriteSheet: idleWizard,
-  //         frameWidth: 150,
-  //         frameHeight: 80,
-  //         frameCount: 6,
-  //         direction: 'vertical',
-  //         fps: 6
-  //       },
-  //       attack_1: {
-  //         spriteSheet: attackWizard,
-  //         frameWidth: 150,
-  //         frameHeight: 80,
-  //         frameCount: 9,
-  //         direction: 'vertical',
-  //         fps: 6
-  //       },
-  //     }
-  //   }
-  // };
-  const backToIdle = () => {
-    setCurrentAnimation('idle');
-    setIsPlaying(true);
-    setAnimationUp(false);  
-    return;
-  }
   const characterChosen = (pack!=null && pack.length === 1) ? pack[0].title : currCharacter;
   const moveChosen = move || currentAnimation;
   // Get the current animation data from the animations object
-  const { sprite, frameWidth, frameHeight, frames, fps } = pack?.filter(p=> p.title === characterChosen)[0].pack[moveChosen] || {};
-  console.log("filtered",pack?.filter(p=> p.title === characterChosen)[0].pack[moveChosen]);
+  const { sprite, frameWidth, frameHeight, frames, fps } = pack?.filter(p=> p.title === characterChosen)[0]?.pack?.[moveChosen] || {};
   if (!sprite) {
     console.warn(`No sprite found for character "${characterChosen}" and move "${moveChosen}"`);
     return null; // If no sprite is found, return null
@@ -278,7 +96,7 @@ const SpriteDemo = ({move=null,pack=null,scale:scaleTo,loop=true}) => {
             fps={fps}
             scale={scale}
             className=""
-            onComplete={backToIdle}
+            onComplete={loop?()=>{}:backToIdle}
             loop={loop}
           />
         )}

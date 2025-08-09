@@ -36,6 +36,7 @@ api.interceptors.response.use(
         return api(originalRequest); // Retry original request
       } catch (refreshError) {
         const refreshErrorStatus = refreshError.response?.status;
+        console.log(refreshError)
         if( refreshErrorStatus === 401 || refreshErrorStatus === 403) {
           console.error("Refresh token failed, logging out user...");
           triggerLogout();

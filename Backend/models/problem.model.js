@@ -15,6 +15,14 @@ const problemSchema = new mongoose.Schema({
         required: true, 
         enum: ['Easy', 'Medium', 'Hard'],
     },
+    tag: {
+        type: String,
+        default: '',
+    },
+    hint:{
+        type: String,
+        default: '',
+    },
     link: {
         type: String,
         required: true,
