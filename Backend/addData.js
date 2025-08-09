@@ -14,8 +14,8 @@ export const insertQuestions = async () => {
       }))
       const result = await Problem.bulkWrite(operations);
       console.log("✅ Problem sync complete!");
-    console.log(`${result.upsertedCount} animations inserted.`);
-    console.log(`${result.modifiedCount} animations updated.`); 
+    console.log(`${result.upsertedCount} problems inserted.`);
+    console.log(`${result.modifiedCount} problems updated.`); 
     } catch (error) {
       console.error("Error inserting/updating animations:", error);
     }
