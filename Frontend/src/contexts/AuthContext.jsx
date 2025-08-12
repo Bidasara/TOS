@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [ATokenExpiry, setATokenExpiry] = useState(null);
   const [error, setError] = useState(null);
   const [cart, setCart] = useState([]);
+  const [pixels,setPixels] = useState(0);
 
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -78,12 +79,14 @@ export const AuthProvider = ({ children }) => {
       setError("Failed to remove animation from cart. Please try again.");
     }
   }
+  
 
   const login = async (formData) => {
     try {
       const response = await api.post("/auth/login", formData, {
         withCredentials: true,
       });
+      console.log(response)
 
       const { accessToken, user, accessTokenExpiry, refreshTokenExpiry } = response.data.data;
       setAccessToken(accessToken); // Store accessToken in memory

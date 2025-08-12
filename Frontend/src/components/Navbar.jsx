@@ -25,7 +25,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className={`w-full h-1/10 flex justify-between relative  px-6 shadow-md transition-all duration-300
+    <nav className={`w-full shrink-0 h-1/10 flex justify-between relative  px-6 shadow-md transition-all duration-300
       ${theme === 'tos' ? 'tos border-b-2 tos-border' : theme === 'cyberpunk' ? 'bg-black cyberpunk-bg neon-text border-b-2 border-pink-500' : 'bg-gray-300 dark:bg-gray-900'}`}>
       {/* Left - Logo */}
       <div className="content-center h-full">
@@ -38,13 +38,14 @@ const Navbar = () => {
           (<></>) : accessToken != null ? (
             <>
               {/* Shop Link */}
+              <button onClick={() => navigate("/milestones")} className={theme === 'tos' ? 'tos-accent cursor-pointer' : 'cursor-pointer focus:outline-none'}>Milestones</button>
               <button onClick={() => navigate("/shop")} className={theme === 'tos' ? 'tos-accent cursor-pointer' : 'cursor-pointer focus:outline-none'}>Shop</button>
               <button onClick={()=> navigate('/library')} className='rounded-lg'>Library</button>
               <button onClick={()=> navigate(`/user/${username}`)} className="cursor-pointer">Dashboard</button>
-              <svg xmlns="http://www.w3.org/2000/svg" className='h-1/3' viewBox="0 0 24 24" fill="yellow" stroke="grey" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {/* <svg xmlns="http://www.w3.org/2000/svg" className='h-1/3' viewBox="0 0 24 24" fill="yellow" stroke="grey" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
+              </svg> */}
               <div className="relative ml-2">
                 <button
                   onClick={() => setDropdownOpen(prev => !prev)}

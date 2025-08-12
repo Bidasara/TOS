@@ -20,5 +20,6 @@ router.get('/getNotes', dataController.getNotesByUserListCategoryProblem);
 router.patch('/submit', dataController.markSolvedWithNotes);
 router.patch('/updateNotes', dataController.updateNotes);
 router.get('/reviseList', dataController.getReviseListByUserId);
+router.get('/solvedAndRevised',dataController.getSolvedAndRevised)
 
 export default router; 

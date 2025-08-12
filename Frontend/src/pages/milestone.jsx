@@ -1,0 +1,91 @@
+// src/components/MilestonesPage.jsx
+
+import React, { useState, useEffect } from 'react';
+import MilestoneCard from '../components/MilestoneCard';
+import { useProblemContext } from '../contexts/ProblemContext';
+import api from '../api';
+
+// --- Mock Data ---
+// In a real app, this would come from your backend API
+// -----------------
+
+const MilestonesPage = () => {
+    const getMilestones = async () => {
+        const data = localStorage.getItem('milestones');
+        if (data) {
+            const parsedData = JSON.parse(data);
+            setMilestones(parsedData);
+        } else {
+            try {
+                const response = await api.get("/user/getAllMilestones", { withCredentials: true });
+                localStorage.setItem('milestones', JSON.stringify(response.data.data));
+                setMilestones(response.data.data);
+                return;
+            } catch (err) {
+                console.error("Error getting all milestones", err);
+            }
+        }
+    }
+    const getMilestonesDone = async () => {
+            try {
+                const response = await api.get("/user/getMilestonesDone", { withCredentials: true });
+                localStorage.setItem('milestonesDone', JSON.stringify(response.data.data.milestones));
+                setMilestonesDone(response.data.data.milestones);
+                localStorage.setItem('pixels',response.data.data.pixels);
+                setPixels(response.data.data.pixels);
+                return;
+            } catch (err) {
+                console.error("Error getting all done milestones", err);
+            }
+    }
+    useEffect(() => {
+        getMilestones();
+        getMilestonesDone()
+    }, [])
+    
+    //   const [pixels, setPixels] = useState(1250);
+    const [milestones, setMilestones] = useState([]);
+    const { pixels,setPixels } = useProblemContext();
+    const [milestonesDone, setMilestonesDone] = useState(localStorage.getItem('milestonesDone'));
+
+    // In a real app, you would have functions here to handle claiming rewards
+    // which would update the state and make an API call.
+
+    return (
+        <div className="milestones-page flex flex-col items-end">
+            <div className="pixel-counter sticky top-4 z-50">
+                <span role="img" aria-label="pixel-coin">{pixels}💠</span>
+            </div>
+            <header className="milestones-header w-full ">
+                <h1>Milestones</h1>
+            </header>
+
+            <main className="flex flex-col gap-3 w-full">
+                {milestones.map((milestone) => (
+                    !milestonesDone.includes(milestone._id)? (
+                        <MilestoneCard
+                            key={milestone._id}
+                            title={milestone.title}
+                            description={milestone.condition}
+                            rewardText={milestone}
+                            status={true}
+                        />
+                    ):null
+                ))}
+                {milestones.map((milestone) => (
+                    milestonesDone.includes(milestone._id) ? (
+                        <MilestoneCard
+                            key={milestone._id}
+                            title={milestone.title}
+                            description={milestone.condition}
+                            rewardText={milestone}
+                            status={false}
+                        />
+                    ):null
+                ))}
+            </main>
+        </div>
+    );
+};
+
+export default MilestonesPage;

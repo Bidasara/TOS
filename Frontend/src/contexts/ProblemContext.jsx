@@ -31,6 +31,9 @@ export const ProblemProvider = ({ children }) => {
     setInputText(query);
   }
 
+  const [pixels,setPixels] = useState(0);
+  
+
   // ===== AUTHENTICATION =====
   const { accessToken } = useAuth();
 
@@ -86,8 +89,11 @@ export const ProblemProvider = ({ children }) => {
       } else {
         try {
           const response = await api.get('/data/allProblems');
-          setProblems(response.data.data);
-          localStorage.setItem("allProblems", JSON.stringify(response.data.data));
+          setProblems(response.data.data.problems);
+          const tots = response.data?.data?.totalProblems;
+          setTotalProblems(tots);
+          localStorage.setItem("TotsProbs", JSON.stringify(tots));
+          localStorage.setItem("allProblems", JSON.stringify(response.data.data.problems));
         } catch (error) {
           console.error("error fetching all problems", error);
           setProblems([]);
@@ -139,12 +145,14 @@ export const ProblemProvider = ({ children }) => {
             headers: { Authorization: `Bearer ${accessToken}` }
           });
           const fetchedData = response.data?.data;
-          const tots = response.data?.data?.totalProblems;
           setData(fetchedData);
+          const tots = response.data?.data?.totalProblems;
           setTotalProblems(tots);
+          setPixels(response.data?.data?.pixels);
+          localStorage.setItem("Pixels",JSON.stringify(response.data?.data?.pixels));
+          localStorage.setItem("TotsProbs", JSON.stringify(tots));
           setCurrentList(fetchedData.lists[0] || {});
           localStorage.setItem("userData", JSON.stringify(fetchedData));
-          localStorage.setItem("TotsProbs", JSON.stringify(tots));
         } catch (error) {
           console.error("Error fetching user data", error);
           setData({ lists: [] });
@@ -177,23 +185,16 @@ export const ProblemProvider = ({ children }) => {
   // ===== HELPER FUNCTIONS =====
   // getTotalSolved: Calculates total number of solved problems across all lists
   // Returns: number (total count of problems where solved: true)
-  const getTotalSolved = () => {
-    if (!data || data == {})
-      return 0;
-    const answer = new Set(data?.lists.flatMap(list =>
-      list.categories.flatMap(cat =>
-        cat.problems.filter(prob => prob.solved).map(p => p.problemId.num)
-      ))).size;
-    return answer;
-  }
-  const getTotalRevised = () => {
-    if (!data || data == {})
-      return 0;
-    const answer = new Set(data?.lists.flatMap(list =>
-      list.categories.flatMap(cat =>
-        cat.problems.filter(prob => prob.revised).map(p => p.problemId.num)
-      ))).size;
-    return answer;
+  const getTotalSolved = async () => {
+    try{
+      const response = await api.get('/data/solvedAndRevised')
+      console.log(response.data.data)
+      setTotalSolved(response.data.data.solved)
+      setTotalRevised(response.data.data.revised)
+    }
+    catch(err){
+      console.error(err);
+    }
   }
 
   // getAllProblems: Calculates total number of problems
@@ -210,13 +211,6 @@ export const ProblemProvider = ({ children }) => {
     setAccessToken(null);
     localStorage.removeItem("userData");
   };
-
-  // ===== STATISTICS UPDATE EFFECT =====
-  // Update statistics whenever data changes
-  useEffect(() => {
-    setTotalSolved(getTotalSolved())
-    setTotalRevised(getTotalRevised())
-  }, [data])
 
   // ===== CRUD OPERATIONS FOR LISTS =====
 
@@ -250,8 +244,9 @@ export const ProblemProvider = ({ children }) => {
     }
     else
       console.log("Found recomlist")
-    if (data?.lists?.find(list => list._id === listId)) {
-      console.log("List already exists in user's lists");
+    console.log(listId,"-",data)
+    if (data?.lists?.find(list => list.title === newList.title)) {
+      showNotification("A list with this name already exists","error");
       return;
     }
     else
@@ -285,9 +280,10 @@ export const ProblemProvider = ({ children }) => {
       const updatedData = { ...data, lists: [...data.lists, createdList] };
       localStorage.setItem("userData", JSON.stringify(updatedData));
 
-      console.log("Successfully added recommended list");
+      showNotification("Successfully added recommended list","success");
     } catch (error) {
-      console.error("Error adding recommended list:", error);
+      showNotification("Error adding to database","error")
+      console.error(error)
       // Don't update state if API call failed
     }
   };
@@ -353,9 +349,46 @@ export const ProblemProvider = ({ children }) => {
       throw error; // Re-throw to let the calling component handle it
     }
   };
+  useEffect(() => {
+    const fetchPixels = async () =>{
+      const storedData = localStorage.getItem("Pixels");
+        if (storedData) {
+          try {
+            const parsedData = JSON.parse(storedData);
+            setPixels(parsedData);
+            return;
+          } catch (err) {
+            console.error("Error parsing pixels", err);
+          }
+        } else {
+          try {
+            const response = await api.get('/data/getAllLists', {
+              headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            const fetchedData = response.data?.data;
+            setData(fetchedData);
+            const tots = response.data?.data?.totalProblems;
+            setTotalProblems(tots);
+            setPixels(response.data?.data?.pixels);
+            localStorage.setItem("Pixels",JSON.stringify(response.data?.data?.pixels));
+            localStorage.setItem("TotsProbs", JSON.stringify(tots));
+            setCurrentList(fetchedData.lists[0] || {});
+            localStorage.setItem("userData", JSON.stringify(fetchedData));
+          } catch (error) {
+            console.error("Error fetching user data", error);
+            setData({ lists: [] });
+            setCurrentList({});
+          }
+        }
+    }
+    fetchPixels();
+  }, [])
+  
   const updateProblemRevisedStatus = async (listId, titleCategory, probId) => {
     try {
       const response = await api.patch('/data/markRevised', { listId, titleCategory, probId }, { headers: { Authorization: `Bearer ${accessToken}` } });
+      setPixels(response.data?.data)
+      localStorage.setItem("Pixels",JSON.stringify(response.data?.data));
       setData(prevData => {
         const newData = {
           ...prevData,
@@ -488,6 +521,9 @@ export const ProblemProvider = ({ children }) => {
           Authorization: `Bearer ${accessToken}`
         }
       })
+      console.log(response.data?.data)
+      setPixels(response.data?.data)
+      localStorage.setItem("Pixels",JSON.stringify(response.data?.data));
       setData(prevData => {
         const newData = {
           ...prevData,
@@ -694,7 +730,10 @@ export const ProblemProvider = ({ children }) => {
     func,
     problems,
     setProblems,
-    updateNotes
+    updateNotes,
+    getTotalSolved,
+    pixels,
+    setPixels
   };
 
   return (

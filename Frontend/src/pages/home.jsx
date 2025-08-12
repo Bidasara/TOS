@@ -75,12 +75,12 @@ function HomeContent() {
         <Options/>
       </div>
       <button 
-        className={`fixed bottom-4 right-4 w-[4vw] h-[4vw] rounded-full cursor-pointer
+        className={`fixed bottom-4 right-4 w-[4vw] h-[4vw] z-100 rounded-full cursor-pointer
                  shadow-lg text-lg hover:shadow-xl transition-all
                  ${theme === 'light' ? 'bg-white text-gray-900' : theme === 'dark' ? 'bg-gray-800 dark:text-amber-400' : 'bg-black text-pink-400 border-2 border-cyan-400 neon-text'}`}
         onClick={toggleTheme}
       >
-        {theme === 'light' ? '🌙' : theme === 'dark' ? '☀️' : <span className="text-pink-400">✦</span>}
+        {theme === 'light' ? '☀️' : theme === 'dark' ? '🌙' : <span className="text-pink-400">✦</span>}
       </button> {/* Theme Toggle */}
     </div>
   )

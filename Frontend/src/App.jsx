@@ -14,6 +14,7 @@ import { SpriteAnimationProvider } from './contexts/SpriteAnimationContext.jsx'
 import { BreakAnimationProvider } from './contexts/BreakAnimationContext.jsx'
 import CheckoutPage from './pages/checkout.jsx'
 import BrowsePage from './pages/browse.jsx'
+import MilestonesPage from './pages/milestone.jsx'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
               <Route path='/shop' element={<PricePage />} />
               <Route path='/checkout' element={<CheckoutPage/>}/>
               <Route path='/library' element={<BrowsePage/>}/>
+              <Route path='/milestones' element={<MilestonesPage/>}/>
             </Route>
             <Route path='/login' element={<Login />} />
             <Route path='/register' element={<Register />} />

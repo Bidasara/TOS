@@ -64,10 +64,32 @@ const userSchema = new Schema({
     cart: [{
         type: Schema.Types.ObjectId,
         ref: 'Animation'
-    }]
+    }],
+    pixels: {
+        type: Number,
+        default: 0
+    },
+    milestones: {
+        type: [{
+            type: Schema.Types.ObjectId,
+            ref: "Milestone"
+        }],
+        default: []
+    },
+    trophies: {
+        type:[{
+            type: String,
+        }],
+        default: []
+    },
+    doneProblemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DoneProblem'
+    }
 },{
     timestamps: true
 });
+
 
 userSchema.pre("save",async function(next){
     if(!this.isModified("password")) return next();

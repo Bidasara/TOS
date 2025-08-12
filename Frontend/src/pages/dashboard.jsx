@@ -41,9 +41,15 @@ const Dashboard = () => {
           <span>Quick Stats</span>
         </h2>
         <div className="grid grid-cols-3 gap-6">
-          {[0,1,2].map(level => (
+          {[0, 1, 2].map(level => (
             <div key={level} className="p-4 rounded-xl border-2 border-indigo-200 bg-indigo-50 text-center shadow-sm">
-              <h3 className="font-semibold text-lg text-indigo-600">{0?"Easy":1?"Medium":"Hard"}</h3>
+              <h3 className="font-semibold text-lg text-indigo-600">
+                {
+                  level === 0 ? "Easy" :
+                    level === 1 ? "Medium" :
+                      "Hard"
+                }
+              </h3>
               <div className="mt-2 text-sm">Attempted: <span className="font-bold">{dashboardData[level]?.solvedCount ?? 0}</span></div>
               <div className="text-sm">Revised: <span className="font-bold">{dashboardData[level]?.revisedCount ?? 0}</span></div>
             </div>

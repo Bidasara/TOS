@@ -8,6 +8,13 @@ dotenv.config({
     path: "./.env"
 });
 
+const requiredEnvVars = ['PORT', 'MONGO_URI' , 'ACCESS_TOKEN_SECRET', 'REFRESH_TOKEN_SECRET'];
+for (const varName of requiredEnvVars) {
+  if (!process.env[varName]) {
+    throw new Error(`FATAL ERROR: Environment variable ${varName} is not defined.`);
+  }
+}
+
 connectDB()
 .then(async () => {
     await insertAnimations();

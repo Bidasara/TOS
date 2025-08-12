@@ -23,10 +23,12 @@ const Modal = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
   useEffect(() => {
     if (!problems) return;
+    if(problems==[])
+      return;
     if (query.length == 0 || query === "" || !showSuggestions)
       setSuggestions([]);
     setSuggestions(
-      problems.filter(
+      problems?.filter(
         p => p.title.toLowerCase().includes(query?.toLowerCase()) || String(p.num).includes(query)
       ).slice(0, 5)
     )

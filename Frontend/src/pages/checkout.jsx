@@ -17,7 +17,7 @@ const CartItem = ({ item, onRemove }) => {
                     style={{imageRendering:'pixelated'}}
                 />
                 <div>
-                    <p className="font-semibold text-gray-800">{item.title}</p>
+                    <p className="font-semibold text-gray-800">{item.title}Set</p>
                     <p className="text-sm text-gray-500">₹{item.price.toFixed(2)}</p>
                 </div>
             </div>
@@ -109,12 +109,12 @@ const CheckoutPage = () => {
                                 <div className="space-y-6">
                                     <div>
                                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                                        <input type="text" id="name" value={cardInfo.name} onChange={handleInputChange} placeholder="John Doe" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-300" required />
+                                        <input type="text" id="name" value={cardInfo.name} onChange={handleInputChange} placeholder="Will add a payment feature soon 😊" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-300" required />
                                     </div>
                                     <div>
                                         <label htmlFor="number" className="block text-sm font-medium text-gray-700 mb-1">Card Information</label>
                                         <div className="relative">
-                                            <input type="text" id="number" value={cardInfo.number} onChange={handleInputChange} placeholder="0000 0000 0000 0000" className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-300" required />
+                                            <input type="text" id="number" value={cardInfo.number} onChange={handleInputChange} placeholder="Enjoy Free Now!!" className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-300" required />
                                             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                                 <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                                             </div>

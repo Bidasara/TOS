@@ -110,18 +110,39 @@ const Dolist = () => {
     const handleMarkRevised = useCallback((listId, categoryTitle, problemId) => {
         const anim = currentPack;
         const delay = anim.pack.break.frames / anim.pack.break.fps;
-        console.log(anim);
 
         setAnimatingProblemId(problemId);
         triggerAttack();
 
-        setTimeout(() => {
+        setTimeout(async() => {
             setHidingProblemId(problemId);
-            updateProblemRevisedStatus(listId, categoryTitle, problemId);
+            await updateProblemRevisedStatus(listId, categoryTitle, problemId);
+            refetch()
             setAnimatingProblemId(null);
         }, delay*1000 - 100);
 
-    }, [updateProblemRevisedStatus,currentPack,triggerAttack]);
+    }, [updateProblemRevisedStatus,currentPack,triggerAttack,refetch]);
+    const [workingCatAdd,setWorkingCatAdd] = useState(true);
+    useEffect(() => {
+      try{
+        const userData = localStorage.getItem("userData");
+        if(!userData){
+            setWorkingCatAdd(false);
+            return;
+        }
+        
+        const parsedData = JSON.parse(userData);
+        console.log(parsedData.lists)
+        if(parsedData.lists.length == 0)
+        setWorkingCatAdd(false);
+        else
+        setWorkingCatAdd(true);
+      } catch(error){
+        console.error(error);
+        setWorkingCatAdd(false)
+      }
+    }, [])
+    console.log(workingCatAdd)
 
 
     // --- Render ---
@@ -140,7 +161,8 @@ const Dolist = () => {
                     <div className="h-full flex flex-col">
                         <div className="h-1/7"><Scrollbar /></div>
                         <div className="h-5/7"><Dropdown /></div>
-                        <button onClick={handleAdd} className='w-full h-1/7 rounded-xl text-black bg-amber-300'>Add New Category</button>
+                        <button
+      title="Please Choose or Add a list first" disabled={!workingCatAdd} onClick={handleAdd} className='w-full h-1/7 rounded-xl text-black disabled:cursor-not-allowed bg-amber-300'>Add New Category</button>
                     </div>
                 )}
 

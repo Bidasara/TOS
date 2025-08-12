@@ -2,19 +2,23 @@ import { List } from "../models/list.model.js";
 import { Problem } from "../models/problem.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { DoneProblem } from "../models/doneProblems.model.js";
 import { ApiError } from "../utils/apiError.js";
 import mongoose from 'mongoose';
+import { User } from "../models/user.model.js";
 
 export const getAllListsByUserId = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     if (!userId) throw new ApiError(400, 'User not logged in');
+    const user = await User.findById(userId);
+    if(!user) throw new ApiError(404,'User not found');
     const lists = await List.find({ owner: userId }).populate('categories.problems.problemId', 'num title difficulty tag hint link');
     if (!lists || lists.length === 0) {
         throw new ApiError(404, 'No lists found for this user');
     }
     const totsProbs = await Problem.find();
     console.log("totalProblems:",totsProbs.length);
-    return res.status(200).json(new ApiResponse(200, { lists: lists, totalProblems: totsProbs.length }, 'Lists retrieved successfully'));
+    return res.status(200).json(new ApiResponse(200, { lists: lists, totalProblems: totsProbs.length,pixels:user.pixels }, 'Lists retrieved successfully'));
 })
 
 export const addListForUserId = asyncHandler(async (req, res) => {
@@ -173,6 +177,8 @@ export const markRevisedProblem = asyncHandler(async (req, res) => {
     const { listId, titleCategory, probId } = req.body;
 
     if (!userId) throw new ApiError(400, 'User not logged in');
+    const user = await User.findById(userId);
+    if(!user) throw new ApiError(404, 'No user found');
     if (!listId) throw new ApiError(400, 'Invalid List');
     if (!titleCategory) throw new ApiError(400, 'Invalid Category');
     if (!probId) throw new ApiError(400, 'Invalid Problem id');
@@ -188,7 +194,15 @@ export const markRevisedProblem = asyncHandler(async (req, res) => {
     problem.revised = true;
     await list.save();
 
-    return res.status(200).json(new ApiResponse(200, `Revised problem ${probId}`));
+    const data = await DoneProblem.findById(user.doneProblemId);
+    if(!data.revisedProblems.includes(problem.problemId)){
+        data.revisedProblems.push(problem.problemId);
+        await data.save();
+        user.pixels += 1;
+    }
+    await user.save();
+
+    return res.status(200).json(new ApiResponse(200,user.pixels, `Revised problem ${probId}`));
 })
 
 export const getNotesByUserListCategoryProblem = asyncHandler(async (req, res) => {
@@ -218,6 +232,8 @@ const markSolvedWithNotes = asyncHandler(async (req, res) => {
     const { listId, catId, probId, notes, addToRevise } = req.body;
 
     if (!userId) throw new ApiError(400, 'User not logged in');
+    const user = await User.findById(userId);
+    if(!user) throw new ApiError(404,'No user found');
     if (!listId) throw new ApiError(400, 'Invalid List');
     if (!catId) throw new ApiError(400, 'Invalid Category');
     if (!probId) throw new ApiError(400, 'Invalid Problem number');
@@ -231,6 +247,8 @@ const markSolvedWithNotes = asyncHandler(async (req, res) => {
     const problem = category.problems.find(prob => prob._id.toString() === probId);
     if (!problem) throw new ApiError(404, 'Problem not found');
 
+    const data = await DoneProblem.findById(user.doneProblemId);
+    data.solvedProblems.push(problem.problemId);
     problem.solved = true;
     problem.notes = notes;
     const shouldRevise = addToRevise === true || addToRevise === 'true';
@@ -242,10 +260,14 @@ const markSolvedWithNotes = asyncHandler(async (req, res) => {
     } else {
         problem.toRevise = null;
         problem.revised = true;
+        data.revisedProblems.push(problem.problemId);
     }
+    user.pixels+=1;
+    await user.save();
+    await data.save();
     await list.save();
 
-    return res.status(200).json(new ApiResponse(200, `Problem ${probId} marked as solved with notes`));
+    return res.status(200).json(new ApiResponse(200, user.pixels,`Problem ${probId} marked as solved with notes`));
 })
 
 const getRecommendedLists = asyncHandler(async (req, res) => {
@@ -292,23 +314,28 @@ const getReviseListByUserId = asyncHandler(async (req, res) => {
 const addRecomListForUserId = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     if (!userId) throw new ApiError(400, 'User not logged in');
+    console.log(1)
     const { listId } = req.body;
     if (!listId) throw new ApiError(400, 'List ID is required');
-
+    console.log(2)
+    
     // Find the recommended list
     const list = await List.findOne({ _id: listId, byAdmin: true }).populate('categories.problems.problemId', 'num title difficulty tag hint link');
     if (!list) throw new ApiError(404, 'Recommended list not found');
-
+    console.log(3)
+    
     // Check if user already has a list with the same title
     const existingList = await List.findOne({ owner: userId, title: list.title });
     if (existingList) throw new ApiError(400, 'You already have this list');
+    console.log(4)
 
     // Deep clone and remove all _id fields
     const listObj = list.toObject();
     delete listObj._id;
     listObj.owner = userId;
     listObj.byAdmin = false;
-
+    console.log(5)
+    
     // Remove _id from categories and problems, and ensure problemId is always ObjectId
     if (Array.isArray(listObj.categories)) {
         listObj.categories = listObj.categories.map(cat => {
@@ -352,7 +379,10 @@ const getAllProblems = asyncHandler(async (req,res)=> {
     const problems = await Problem.find();
     if(!problems)
         throw new ApiError(404,"No problems found");
-    return res.status(200).json(new ApiResponse(200,problems,'Successfully sent all problems'));
+
+    const totsProbs = await Problem.find();
+    console.log("totalProblems:",totsProbs.length);
+    return res.status(200).json(new ApiResponse(200,{problems:problems,totalProblems:totsProbs.length},'Successfully sent all problems'));
 })
 
 const updateNotes = asyncHandler(async (req,res)=>{
@@ -378,6 +408,16 @@ const updateNotes = asyncHandler(async (req,res)=>{
     return res.status(200).json(new ApiResponse(200,`Problem id: ${probId}, notes updated`));
 })
 
+const getSolvedAndRevised = asyncHandler(async (req,res)=>{
+    const userId = req.user.id;
+    if(!userId) throw new ApiError('User not logged in');
+    const user = await User.findById(userId)
+    if(!user) throw new ApiError('User not found');
+    const data  = await DoneProblem.findById(user.doneProblemId);
+    console.log(112);
+    return res.status(200).json(new ApiResponse(200,{solved:data.solvedProblems.length,revised:data.revisedProblems.length}))
+})
+
 export default {
     getNotesByUserListCategoryProblem,
     markRevisedProblem,
@@ -393,5 +433,6 @@ export default {
     deleteProblem,
     getReviseListByUserId,
     getAllProblems,
-    updateNotes
+    updateNotes,
+    getSolvedAndRevised,
 }

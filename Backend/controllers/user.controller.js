@@ -3,7 +3,10 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/apiResponse.js';
 import { ApiError } from '../utils/apiError.js';
 import { List } from '../models/list.model.js';
+import { Milestone } from '../models/milestones.model.js';
 import { Animation } from '../models/animation.model.js';
+import { Purchase } from '../models/purchase.model.js';
+import { DoneProblem } from '../models/doneProblems.model.js';
 
 const getUserDashboard = asyncHandler(async (req, res) => {
   const username = req.params.username || req.user.username;
@@ -312,10 +315,88 @@ const getAttemptedRevisedStats = asyncHandler(async (req, res) => {
   res.json({ success: true, data: result });
 });
 
+const addPixels = asyncHandler(async(req,res)=>{
+  const userId = req.user.id;
+  if(!userId)
+    throw new ApiError(404,"No user id provided")
+  const user = await User.findById(userId);
+  if(!user)
+    throw new ApiError(404,"User not found")
+  const ownedpixels = user.pixels;
+  user.pixels += req.body.amount;
+  await user.save();
+  return res.status(200).json(new ApiResponse(200,`${req.body.amount} Pixels added successfully`));
+})
+const removePixels = asyncHandler(async(req,res)=>{
+  const userId = req.user.id;
+  if(!userId)
+    throw new ApiError(404,"No user id provided")
+  const user = await User.findById(userId);
+  if(!user)
+    throw new ApiError(404,"User not found")
+  const ownedpixels = user.pixels;
+  user.pixels -= req.body.amount;
+  await user.save();
+  return res.status(200).json(new ApiResponse(200,`${req.body.amount} Pixels removed successfully`));
+})
+const markMilestoneDone = asyncHandler(async(req,res)=>{
+  const userId = req.user.id;
+  if(!userId)
+    throw new ApiError(404,"No user id provided")
+  const user = await User.findById(userId);
+  if(!user)
+    throw new ApiError(404,"User not found")
+  const milestoneId = req.params.id;
+  if(!milestoneId)
+    throw new ApiError(404,"No milestone provided")
+  const milestone = await Milestone.findById(milestoneId);
+  if(!milestone)
+    throw new ApiError(404,"No milestone found");
+  if(user.milestones.includes(milestoneId))
+    return res.status(200).json(new ApiResponse(200,'Milestone already redeemed'));
+  user.milestones.push(milestoneId);
+  const dataset = await DoneProblem.find({user:user._id});
+  const data = dataset[0];
+  let diff = milestone.questionsToRevise - data.revisedProblems.length
+  if(diff > 0){
+    return res.status(400).json(new ApiResponse(300,`Just ${diff} more questions to revise 🦾😊🦾`))
+  }
+  if(milestone.rewardPixels>0){
+    user.pixels += milestone.rewardPixels;
+  }
+  if(milestone.rewardAnimation){
+    const newPurchase = new Purchase({
+      user: userId,
+      animation: milestone.rewardAnimation,
+      trialEnd: new Date(8640000000000000)
+    })
+    await newPurchase.save();
+  }
+  if(milestone.rewardTrophy){
+    user.trophies.push(milestone.rewardTrophy);
+  }
+  await user.save();
+  return res.status(200).json(new ApiResponse(200,'Marked Milestone done'));
+})
+const getAllMilestones = asyncHandler(async(req,res)=>{
+  const milestones = await Milestone.find();
+  console.log(milestones)
+  return res.status(200).json(new ApiResponse(200,milestones,'Successfully sent all milestones'));
+})
+
+const getAllMilestonesDone = asyncHandler(async(req,res)=>{
+  const userId = await req.user.id;
+  if(!userId) throw new ApiError(400,'user not logged in');
+  const user = await User.findById(userId);
+  if(!user) throw new ApiError(404,"User not found");
+  return res.status(200).json(new ApiResponse(200,{milestones:user.milestones,pixels:user.pixels},'Successfully sent all done milestones'));
+})
+
 export default {
   getUserDashboard,
   updateCurrentUserProfile,
   deleteAccount,
+  getAllMilestonesDone,
   getAllUsers,
   getUserById,
   updateUser,
@@ -323,4 +404,8 @@ export default {
   getCart,
   addToCart,
   removeFromCart,
+  addPixels,
+  removePixels,
+  markMilestoneDone,
+  getAllMilestones
 };

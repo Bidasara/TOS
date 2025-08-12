@@ -18,7 +18,7 @@ export const ThemeProvider = ({ children }) => {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'cyberpunk' : prev === 'cyberpunk' ? 'tos' : 'light');
+    setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'tos' : 'light');
   };
 
   return (

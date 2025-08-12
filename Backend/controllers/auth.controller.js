@@ -2,6 +2,7 @@ import {User} from '../models/user.model.js'
 import { generateTokens, verifyRefreshToken } from '../utils/jwtUtils.js'
 import crypto from 'crypto'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { DoneProblem } from '../models/doneProblems.model.js'
 import { ApiError } from '../utils/apiError.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { ApiResponse } from '../utils/apiResponse.js'
@@ -49,13 +50,17 @@ const registerUser = asyncHandler( async (req,res) => {
     } else {
         throw new ApiError(400, 'Avatar is required - either upload a file or select a default avatar');
     }
-    
     const user = await User.create({
         username: username.toLowerCase(),
         email: email.toLowerCase(),
         password,
         avatar: avatarUrl
     })
+    const data = await DoneProblem.create({
+        user: user._id
+    })
+    user.doneProblemId = data._id;
+    user.save();
 
     if(!user)
         throw new ApiError(500, 'Error creating user');
