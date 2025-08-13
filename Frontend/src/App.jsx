@@ -15,6 +15,8 @@ import { BreakAnimationProvider } from './contexts/BreakAnimationContext.jsx'
 import CheckoutPage from './pages/checkout.jsx'
 import BrowsePage from './pages/browse.jsx'
 import MilestonesPage from './pages/milestone.jsx'
+import ResetPassword from './pages/resetPassword.jsx'
+import GetEmail from './pages/getEmail.jsx'
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
               <Route path='/milestones' element={<MilestonesPage/>}/>
             </Route>
             <Route path='/login' element={<Login />} />
+            <Route path='/getEmail' element={<GetEmail/>}/>
+            <Route path='/resetPass' element={<ResetPassword/>}/>
             <Route path='/register' element={<Register />} />
           </Routes>
           </ProblemProvider>

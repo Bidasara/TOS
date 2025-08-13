@@ -380,7 +380,7 @@ const markMilestoneDone = asyncHandler(async(req,res)=>{
 })
 const getAllMilestones = asyncHandler(async(req,res)=>{
   const milestones = await Milestone.find();
-  console.log(milestones)
+  (milestones)
   return res.status(200).json(new ApiResponse(200,milestones,'Successfully sent all milestones'));
 })
 

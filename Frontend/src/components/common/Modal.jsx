@@ -8,7 +8,8 @@ const Modal = ({
   onSubmit,
   title,
   size = "md",
-  extra
+  extra,
+  children
 }) => {
   const modalRef = useRef();
   const {
@@ -22,7 +23,11 @@ const Modal = ({
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(true);
   useEffect(() => {
-    if (!problems) return;
+    if (func!=='problem'){
+      setSuggestions([]);
+      setShowSuggestions(false)
+      return;
+    } 
     if(problems==[])
       return;
     if (query.length == 0 || query === "" || !showSuggestions)
@@ -85,7 +90,7 @@ const Modal = ({
         </div>
 
         <div className="p-6">
-          <Input
+          {children?(children):(<Input
             label={inputLabel}
             id={inputId}
             type="text"
@@ -98,7 +103,7 @@ const Modal = ({
             }}
             onKeyDown={(e) => { if (e.key === 'Enter') currFunc }}
             extra={modalExtra}
-          />
+          />)}
           {showSuggestions && (
             <ul className='absolute bg-white border rounded shadow z-50'>
               {suggestions.map(s => (

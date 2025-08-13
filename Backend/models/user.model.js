@@ -85,6 +85,14 @@ const userSchema = new Schema({
     doneProblemId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'DoneProblem'
+    },
+    isVerified:{
+        type: Boolean,
+        default: false
+    },
+    verificationCode: {
+        type: String,
+        default: null
     }
 },{
     timestamps: true

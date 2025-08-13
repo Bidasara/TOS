@@ -113,14 +113,7 @@ const Register = (props) => {
                     "Content-Type": "multipart/form-data"
                 }
             });
-            const { accessToken, user } = response.data.data;
-            setAccessToken(accessToken);
-            setUsername(user.username);
-            setAvatarLink(user.avatar);
-            localStorage.setItem("username", user.username);
-            localStorage.setItem("avatarLink", user.avatar);
-
-            navigate("/");
+            navigate(`/login?username=${formData.username}`);
         } catch (error) {
             console.log("Error:", error);
             if (error.response?.data?.message) {

@@ -40,18 +40,15 @@ const uploadAnimation = asyncHandler(async (req, res) => {
 })
 
 const getAllAnimations = asyncHandler(async (req, res) => {
-    const animations = await Animation.find().select('-createdAt -updatedAt');
-    if (!animations || animations.length === 0) {
-        throw new ApiError(404, 'No animations found');
-    }
-    return res.status(200).json(new ApiResponse(200, animations, 'Animations retrieved successfully'));
+    const animations = await Animation.find();
+    if (!animations || animations.length === 0)
+    return res.status(204).json(new ApiResponse(204, [], 'No Animations Found'));
+    
+    return res.status(200).json(new ApiResponse(200, animations,'All animations sent'));
 })
 
 const getAllAnimationPacksForUserId = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-
-    if (!userId) throw new ApiError(400, 'User not logged in');
-
     const currentDate = new Date();
 
     const activePurchases = await Purchase.find({
@@ -62,30 +59,26 @@ const getAllAnimationPacksForUserId = asyncHandler(async (req, res) => {
     .lean();
 
     if (!activePurchases || activePurchases.length === 0) {
-        return res.status(205).json(new ApiResponse(205,[],'No user purchases'));
+        return res.status(204).json(new ApiResponse(204,[],'No user Animations'));
     }
 
     const animationIds = activePurchases.map(purchase => purchase.animation);
 
-    const animations = await Animation.find({ _id: { $in: animationIds } }).select('-createdAt -updatedAt');
+    const animations = await Animation.find({ _id: { $in: animationIds } });
 
-    return res.status(200).json(new ApiResponse(200, animations, 'Animations retrieved successfully'));
+    return res.status(200).json(new ApiResponse(200, animations, 'User Animations sent'));
 })
 
 const purchaseAnimation = asyncHandler(async (req, res) => {
-    const { userId, animationId } = req.body;
-    if (!userId || !animationId) {
-        throw new ApiError(400, 'User ID and Animation ID are required');
+    const { animationId } = req.body;
+    const userId = req.user.id;
+    if (!animationId) {
+        throw new ApiError(404, 'Animation ID not found');
     }
 
     const animation = await Animation.findById(animationId);
     if (!animation) {
-        throw new ApiError(404, 'Animation not found');
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-        throw new ApiError(404, 'User not found');
+        throw new ApiError(404, 'No Animation with this ID found');
     }
     try {
         const purchase = await Purchase.create({

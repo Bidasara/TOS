@@ -72,7 +72,30 @@ const OwnerLists = () => {
     // 1. State to hold the lists. It defaults to an empty array.
     const [lists, setLists] = useState([]);
     const { accessToken } = useAuth();
-    const { addToList } = useProblemContext();
+    const { addToList ,recomList} = useProblemContext();
+    useEffect(() => {
+    const fetchRecomLists = async () => {
+      const storedData = localStorage.getItem("recomLists");
+      if (storedData) {
+        try {
+          setLists(JSON.parse(storedData));
+          return;
+        } catch (err) {
+          console.error("Error parsing data", err);
+        }
+      } else {
+        try {
+          const response = await api.get('/data/recomLists');
+          setLists(response.data.data);
+          localStorage.setItem("recomLists", JSON.stringify(response.data.data));
+        } catch (error) {
+          console.error("Error fetching recommended lists", error);
+          setLists([]);
+        }
+      }
+    };
+    fetchRecomLists();
+  }, []);
 
     // 2. Effect hook to run code when the component mounts.
     useEffect(() => {
@@ -96,8 +119,8 @@ const OwnerLists = () => {
                 <h3 className="font-extrabold text-2xl h-1/12 text-slate-900 ">Featured Lists</h3>
                 <div className="h-11/12 flex flex-col gap-2">
                     {/* 3. Map over the 'lists' state variable instead of the old mock data */}
-                    {lists.length > 0 ? (
-                        lists.map(list => (
+                    {recomList.length > 0 ? (
+                        recomList.map(list => (
                             <div key={list._id} className=" border-b h-4/12 flex justify-between items-center border-slate-200">
                                 <div className='w-10/12 p-1'>
                                     <a href="#" className="font-bold text-lg text-slate-800 hover:text-blue-600 transition-colors">

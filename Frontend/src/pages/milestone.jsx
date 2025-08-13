@@ -62,7 +62,7 @@ const MilestonesPage = () => {
 
             <main className="flex flex-col gap-3 w-full">
                 {milestones.map((milestone) => (
-                    !milestonesDone.includes(milestone._id)? (
+                    !milestonesDone?.includes(milestone._id)? (
                         <MilestoneCard
                             key={milestone._id}
                             title={milestone.title}

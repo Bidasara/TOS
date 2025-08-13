@@ -293,9 +293,7 @@ export const ProblemProvider = ({ children }) => {
   // Action: POSTs to backend, adds new list to data.lists, sets as currentList
   const addEmptyList = async (title) => {
     try {
-      const response = await api.post('/data/addList', { title: title }, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
+      const response = await api.post('/data/addList', { title: title })
       const newList = response?.data?.data?.list;
       setData(prevData => ({
         ...prevData,

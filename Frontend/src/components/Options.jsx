@@ -7,7 +7,7 @@ import Input from './common/Input';
 
 const Options = (props) => {
     const { accessToken } = useAuth();
-    const { setCurrentList, data,getTotalSolved } = useProblemContext();
+    const { setCurrentList, data,getTotalSolved,addEmptyList } = useProblemContext();
     const { totalProblems, totalSolved, totalRevised } = useProblemContext();
     const { theme } = useTheme();
 
@@ -16,6 +16,15 @@ const Options = (props) => {
 
     // 2. Add state to manage the visibility of the stats
     const [isStatsVisible, setIsStatsVisible] = useState(true);
+
+    const handleAddList = async (title) =>{
+        console.log('title',title)
+        if(!accessToken)
+            console.log("need to be registered for that");
+        else{
+            addEmptyList(title);
+        }
+    }   
     useEffect(()=>{
         getTotalSolved();
     },[])
@@ -120,7 +129,7 @@ const Options = (props) => {
                     isOpen={tabOpen}
                     onClose={() => setTabOpen(false)}
                     onSubmit={() => {
-                        // Your handleAddList logic here
+                        handleAddList(inputVal);
                         setInputVal("");
                         setTabOpen(false);
                     }}
@@ -135,7 +144,8 @@ const Options = (props) => {
                         autoFocus={true}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
-                                // Your handleAddList logic here
+                                console.log(12312)
+                                handleAddList(inputVal);
                                 setInputVal("");
                                 setTabOpen(false);
                             }

@@ -17,14 +17,14 @@ export const getAllListsByUserId = asyncHandler(async (req, res) => {
         throw new ApiError(404, 'No lists found for this user');
     }
     const totsProbs = await Problem.find();
-    console.log("totalProblems:",totsProbs.length);
+    ("totalProblems:",totsProbs.length);
     return res.status(200).json(new ApiResponse(200, { lists: lists, totalProblems: totsProbs.length,pixels:user.pixels }, 'Lists retrieved successfully'));
 })
 
 export const addListForUserId = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     if (!userId) throw new ApiError(400, 'User not logged in');
-
+    if(!req.body.title) throw new ApiError(400,"Title not provided")
     const list = new List({
         ...req.body.list,
         owner: userId,
@@ -32,6 +32,9 @@ export const addListForUserId = asyncHandler(async (req, res) => {
     });
 
     await list.save();
+    const user = await User.findById(userId);
+    user.lists.push(list._id);
+    await user.save();
 
     return res.status(201).json(new ApiResponse(201, { list }, 'List created successfully'));
 })
@@ -148,27 +151,27 @@ export const deleteProblem = asyncHandler( async (req,res)=> {
     const userId = req.user.id;
     if(!userId) throw new ApiError(400, 'User not logged in');
     const {listId, categoryId, problemId} = req.body;
-    console.log('2',listId);
+    ('2',listId);
     if(!listId) throw new ApiError(400, 'Invalid List');
     if(!categoryId) throw new ApiError(400, 'Invalid Category');
     if(!problemId) throw new ApiError(400, 'Invalid Problem id');
-    console.log('3');
+    ('3');
 
     const list = await List.findById(listId);
-    console.log('4');
+    ('4');
     if(!list) throw new ApiError(404, 'List not found');
     if(!list.byAdmin && list.owner != userId) throw new ApiError(404, 'Unauthorized to delete problem');
 
     const category = list.categories.id(categoryId);
-    console.log('5');
+    ('5');
     if(!category) throw new ApiError(404, 'Category not found');
 
     category.problems = category.problems.filter(prob=> prob._id != problemId)
-    console.log('6');
+    ('6');
 
-    console.log('7');
+    ('7');
     await list.save();
-    console.log('8');
+    ('8');
     return res.status(200).json(new ApiResponse(200, 'Problem deleted successfully'));
 })
 
@@ -314,27 +317,22 @@ const getReviseListByUserId = asyncHandler(async (req, res) => {
 const addRecomListForUserId = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     if (!userId) throw new ApiError(400, 'User not logged in');
-    console.log(1)
     const { listId } = req.body;
     if (!listId) throw new ApiError(400, 'List ID is required');
-    console.log(2)
     
     // Find the recommended list
     const list = await List.findOne({ _id: listId, byAdmin: true }).populate('categories.problems.problemId', 'num title difficulty tag hint link');
     if (!list) throw new ApiError(404, 'Recommended list not found');
-    console.log(3)
     
     // Check if user already has a list with the same title
     const existingList = await List.findOne({ owner: userId, title: list.title });
     if (existingList) throw new ApiError(400, 'You already have this list');
-    console.log(4)
 
     // Deep clone and remove all _id fields
     const listObj = list.toObject();
     delete listObj._id;
     listObj.owner = userId;
     listObj.byAdmin = false;
-    console.log(5)
     
     // Remove _id from categories and problems, and ensure problemId is always ObjectId
     if (Array.isArray(listObj.categories)) {
@@ -361,7 +359,7 @@ const addRecomListForUserId = asyncHandler(async (req, res) => {
     }
 
     // Log the object to be saved for debugging
-    console.log('About to save new list:', JSON.stringify(listObj, null, 2));
+    ('About to save new list:', JSON.stringify(listObj, null, 2));
 
     // Create and save the new list, with error handling
     try {
@@ -381,8 +379,10 @@ const getAllProblems = asyncHandler(async (req,res)=> {
         throw new ApiError(404,"No problems found");
 
     const totsProbs = await Problem.find();
-    console.log("totalProblems:",totsProbs.length);
-    return res.status(200).json(new ApiResponse(200,{problems:problems,totalProblems:totsProbs.length},'Successfully sent all problems'));
+    if(!totsProbs)
+        throw new ApiError(404,'no probs');
+    ("totalProblems:",totsProbs.length);
+    return res.status(200).json(new ApiResponse(200,{problems:totsProbs,totalProblems:totsProbs.length},'Successfully sent all problems'));
 })
 
 const updateNotes = asyncHandler(async (req,res)=>{
@@ -414,7 +414,7 @@ const getSolvedAndRevised = asyncHandler(async (req,res)=>{
     const user = await User.findById(userId)
     if(!user) throw new ApiError('User not found');
     const data  = await DoneProblem.findById(user.doneProblemId);
-    console.log(112);
+    (112);
     return res.status(200).json(new ApiResponse(200,{solved:data.solvedProblems.length,revised:data.revisedProblems.length}))
 })
 

@@ -1,4 +1,4 @@
-import {User} from '../models/user.model.js' 
+import { User } from '../models/user.model.js'
 import { generateTokens, verifyRefreshToken } from '../utils/jwtUtils.js'
 import crypto from 'crypto'
 import { asyncHandler } from '../utils/asyncHandler.js'
@@ -6,144 +6,145 @@ import { DoneProblem } from '../models/doneProblems.model.js'
 import { ApiError } from '../utils/apiError.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { ApiResponse } from '../utils/apiResponse.js'
+import nodemailer from 'nodemailer'
+import dotenv from "dotenv"
 
-const registerUser = asyncHandler( async (req,res) => {
+dotenv.config({
+    path: '../.env'
+})
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'harshitbidasara@gmail.com',
+        pass: process.env.EMAIL_PASS
+    }
+})
+
+const registerUser = asyncHandler(async (req, res) => {
     const { username, email, password, avatarLink } = req.body;
-
-    if ([username, email, password].some((field) => !field || field?.trim() === "")) {
-        throw new ApiError(400, 'Username, email, and password are required');
-    }
-
-    if (username.trim().length < 3) {
-        throw new ApiError(400, 'Username must be at least 3 characters long');
-    }
-
-    if (password.length < 8) {
-        throw new ApiError(400, 'Password must be at least 8 characters long');
-    }
 
     const existingUser = await User.findOne({
         $or: [
-            {username : username.toLowerCase()},
-            {email : email.toLowerCase()}
+            { username: username.toLowerCase() },
+            { email: email.toLowerCase() }
         ]
     })
 
-    if(existingUser)
-    throw new ApiError(409, 'Username or email already exists');
+    if (existingUser)
+        throw new ApiError(409, 'Username or email already exists');
 
     let avatarUrl;
 
-    // Check if user uploaded a file or selected a default avatar
     if (req.file) {
-        // User uploaded a custom file
         const avatarLocalPath = req.file.path;
         const avatar = await uploadOnCloudinary(avatarLocalPath);
-        
-        if(!avatar)
+        if (!avatar)
             throw new ApiError(500, 'Error uploading avatar to Cloudinary');
-        
         avatarUrl = avatar.url;
-    } else if (avatarLink) {
-        // User selected a default avatar
-        avatarUrl = avatarLink;
     } else {
-        throw new ApiError(400, 'Avatar is required - either upload a file or select a default avatar');
+        avatarUrl = avatarLink;
     }
+    const verificationCode = crypto.randomBytes(Math.ceil(11 / 2))
+        .toString('hex')
+        .slice(0, 11);
     const user = await User.create({
         username: username.toLowerCase(),
         email: email.toLowerCase(),
         password,
-        avatar: avatarUrl
+        avatar: avatarUrl,
+        verificationCode,
     })
+
+    if (!user)
+        throw new ApiError(500, 'Error creating user');
     const data = await DoneProblem.create({
         user: user._id
     })
     user.doneProblemId = data._id;
-    user.save();
+    await user.save();
 
-    if(!user)
-        throw new ApiError(500, 'Error creating user');
+    await transporter.sendMail({
+        from: 'harshitbidasara@gmail.com',
+        to: `${email}`,
+        subject: 'Verify you identity',
+        html: `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Account Verification</title><style>body {font-family: sans-serif;background-color: #f4f4f4;margin: 0;padding: 0;-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 100%;}.container {width: 100%;max-width: 600px;margin: 0 auto;background-color: #ffffff;border-radius: 8px;overflow: hidden;box-shadow: 0 4px 8px rgba(0,0,0,0.1);}.header {background-color: #000000;text-align: center;padding: 15px 0;}.header img {height: 30px;}.content {padding: 30px;color: #333333;}.content h1 {color: #000000;font-size: 24px;margin-top: 0;text-align: center;}.content p {font-size: 16px;line-height: 1.5;text-align: center;}.verification-code {background-color: #f0f0f0;color: #000000;font-size: 24px;font-weight: bold;text-align: center;padding: 15px 20px;border-radius: 5px;margin: 20px auto;max-width: 250px;letter-spacing: 2px;}.footer {background-color: #f9f9f9;text-align: center;padding: 20px;font-size: 12px;color: #999999;border-top: 1px solid #eeeeee;}</style></head><body><div class=\"container\"><div class=\"header\"><a href=\"#\"><img src=\"https://res.cloudinary.com/harshitbd/image/upload/v1755112477/Screenshot_2025-08-14_003524_ohybri.png\" alt=\"ReviseCoder Logo\"></a></div><div class=\"content\"><h1>Please Verify Your Account</h1><p>Thank you for registering with us! To complete your registration, please use the verification code below. This code is valid for the next 10 minutes.</p><div class=\"verification-code\">${verificationCode}</div><p>If you did not request this verification, you can safely ignore this email.</p></div><div class=\"footer\">This is an automated email. Please do not reply.</div></div></body></html>`
+    })
+    // const tokens = generateTokens(user);
+    // if(!tokens)
+    //     throw new ApiError(500, 'Error generating tokens');
 
-    const tokens = generateTokens(user);
-    if(!tokens)
-        throw new ApiError(500, 'Error generating tokens');
+    // res.cookie('refreshToken', tokens.refreshToken, {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: "Strict",
+    //     maxAge: 5 * 24 * 60 * 60 * 1000 // 7 days
+    // }) 
+    return res.status(200).json(new ApiResponse(200,
+        // user: {
+        //     id: user._id,
+        //     username: user.username,
+        //     email: user.email,
+        //     role: user.role,
+        //     avatar: user.avatar
+        // },
+        // accessToken:tokens.accessToken,
+        // accessTokenExpiry:tokens.accessTokenExpiresIn
+        'Check your email for a one-time password. Use it first time, your regular password will work second time onward'));
+})
 
-    res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    }) 
-    return res.status(200).json(new ApiResponse(200, {
-        user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-            avatar: user.avatar
-        },
-        accessToken:tokens.accessToken
-    }, 'User Signed in successfully'));
-}) 
+const login = asyncHandler(async (req, res) => {
 
-const login = asyncHandler( async (req,res) =>{
-    
-    const {username, email, password} =  req.body;
+    const { username, email, password } = req.body;
 
-    if(!username && !email)
-    throw new ApiError(400, 'Username or email is required');
-
-    if(!password)
-    throw new ApiError(400, 'Password is required');
-
-    // Find user by username or email
     const user = await User.findOne({
         $or: [
             { username: username },
             { email: email }
         ]
-    }).select('+password +failedLoginAttempts +lockedUntil');
+    }).select('+password +failedLoginAttempts +lockedUntil +isVerified +verificationCode');
 
-    if(!user){
+    if (!user)
         throw new ApiError(401, 'Invalid username/email or password');
-    }
 
-    if(user.lockedUntil && user.lockedUntil > Date.now()){
-        const timeLeft = Math.ceil((user.lockedUntil - Date.now())/1000);
+    if (user.lockedUntil && user.lockedUntil > Date.now()) {
+        const timeLeft = Math.ceil((user.lockedUntil - Date.now()) / 1000);
         const formattedTime = new Date(user.lockedUntil).toLocaleString();
         throw new ApiError(403, `Account is locked until ${formattedTime} (${timeLeft} seconds remaining)`);
     }
+    let isPasswordValid = false;
+    if (user.isVerified)
+        isPasswordValid = await user.isPasswordCorrect(password);
+    else {
+        isPasswordValid = user.verificationCode == password;
+    }
+    user.isVerified = true;
+    user.verificationCode = null;
 
-    const isPasswordValid = await user.isPasswordCorrect(password);
-
-    if(!isPasswordValid){
+    if (!isPasswordValid) {
         user.failedLoginAttempts += 1;
-        if(user.failedLoginAttempts >= 5){
+        if (user.failedLoginAttempts >= 5) {
             user.lockedUntil = Date.now() + 1 * 60 * 1000;
         }
-        await user.save({validationBeforeSave : false});
+        await user.save({ validationBeforeSave: false });
         throw new ApiError(401, 'Invalid username/email or password');
     }
 
-    // Reset failed login attempts on successful login
     user.failedLoginAttempts = 0;
     user.lockedUntil = null;
-    await user.save({validateBeforeSave: false});
-    
+    await user.save({ validateBeforeSave: false });
 
     const tokens = generateTokens(user);
 
-    
-    if(!tokens)
+    if (!tokens)
         throw new ApiError(500, 'Error generating tokens');
 
     res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    }) 
+        maxAge: 5 * 24 * 60 * 60 * 1000 // 5 days
+    })
     return res.status(200).json(new ApiResponse(200, {
         user: {
             id: user._id,
@@ -151,122 +152,123 @@ const login = asyncHandler( async (req,res) =>{
             email: user.email,
             role: user.role,
             avatar: user.avatar,
-            
+
         },
-        accessToken:tokens.accessToken
+        accessToken: tokens.accessToken,
+        accessTokenExpiry: tokens.accessTokenExpiresIn
     }, 'User logged in successfully'));
 })
 
-const refreshToken = asyncHandler( async (req,res) =>{
+const refreshToken = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
-    if(!refreshToken)
+    if (!refreshToken)
         throw new ApiError(400, 'Refresh token is required');
 
     let decoded;
     try {
         decoded = verifyRefreshToken(refreshToken);
     } catch (err) {
-        // If the token is invalid or expired, return 401 and do not continue
-        return res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+        res.clearCookie('refreshToken');
+        return res.status(401).json({ success: false, message: 'Invalid or expired refresh token, user logged out successfully' });
     }
 
     const user = await User.findById(decoded.id);
-    if(!user)
+    if (!user)
         throw new ApiError(403, 'User not found');
 
     const tokens = generateTokens(user);
-    if(!tokens)
+    if (!tokens)
         throw new ApiError(500, 'Error generating tokens');
 
     res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "Strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: 5 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     return res.status(200).json(new ApiResponse(200, {
         accessToken: tokens.accessToken,
         accessTokenExpiry: tokens.accessTokenExpiresIn,
-        refreshTokenExpiry: tokens.refreshTokenExpiresIn
     }, 'Tokens refreshed successfully'));
 })
 
-const logout = asyncHandler( async (req,res) =>{
+const logout = asyncHandler(async (req, res) => {
     res.clearCookie('refreshToken');
-    return res.status(200).json({
+    return res.status(204).json({
         success: true,
         message: 'User logged out successfully'
     })
 })
 
-const forgotPassword = asyncHandler( async (req,res) =>{
-
+const forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.body;
-
-    if(!email)
-    throw new ApiError(400, 'Email is required');
 
     const user = await User.findOne({ email });
 
-    if(!user){
-        return res.status(200).json(ApiResponse(200, null, 'If your email is registered, you will receive a password reset link'));
+    if (!user) {
+        return res.status(200).json(new ApiResponse(200, 'If your email is registered, you will receive a password reset link'));
     }
-    
+    console.log(121)
+
     const resetToken = crypto.randomBytes(32).toString('hex');
 
-    user.passwordResetToken = crypto
-        .createHash('sha256')
-        .update(resetToken)
-        .digest('hex');
+    user.passwordResetToken = resetToken;
+    await user.save({ validateBeforeSave: false });
+    
+    await transporter.sendMail({
+        from: "harshitbidasara@gmail.com",
+        to: `${email}`,
+        subject: 'Password Reset Request',
+        html: `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Password Reset</title><style>body {font-family: sans-serif;background-color: #f4f4f4;margin: 0;padding: 0;-webkit-text-size-adjust: 100%;-ms-text-size-adjust: 100%;}.container {width: 100%;max-width: 600px;margin: 0 auto;background-color: #ffffff;border-radius: 8px;overflow: hidden;box-shadow: 0 4px 8px rgba(0,0,0,0.1);}.header {background-color: #000000;text-align: center;padding: 15px 0;}.header img {height: 30px;}.content {padding: 30px;color: #333333;}.content h1 {color: #000000;font-size: 24px;margin-top: 0;text-align: center;}.content p {font-size: 16px;line-height: 1.5;text-align: center;}.button {display: inline-block;background-color: #007bff;color: #ffffff;text-decoration: none;padding: 12px 25px;border-radius: 5px;font-weight: bold;margin: 20px auto;}.center-div {text-align: center;}.footer {background-color: #f9f9f9;text-align: center;padding: 20px;font-size: 12px;color: #999999;border-top: 1px solid #eeeeee;}</style></head><body><div class=\"container\"><div class=\"header\"><a href=\"#\"><img src=\"https://res.cloudinary.com/harshitbd/image/upload/v1755112477/Screenshot_2025-08-14_003524_ohybri.png\" alt=\"ReviseCoder Logo\"></a></div><div class=\"content\"><h1>Password Reset Requested</h1><p>You have requested to reset the password for your account. Use this reset code to change your password.</p><div class=\"center-div\">${resetToken}</div><p>If you did not request a password reset, please ignore this email. Your password will remain unchanged.</p></div><div class=\"footer\">This is an automated email. Please do not reply.</div></div></body></html>`
+    })
 
-    user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
-
-    await user.save({validateBeforeSave: false});
-
-    // Send email with reset token (not implemented here) for now just return it;
-
-    return res.status(200).json(new ApiResponse(200, {user,resetToken : resetToken}, 'If your email is registered, you will receive a password reset link'))
+    return res.status(200).json(new ApiResponse(200, { user, resetToken: resetToken }, 'If your email is registered, you will receive a password reset link'))
 });
 
-const resetPassword = asyncHandler( async (req,res) =>{
-    
-    const { token, password } = req.body;
+const resetPassword = asyncHandler(async (req, res) => {
 
-    if(!token || !password)
-    throw new ApiError(400, 'Token and new password are required');
-
-    const hashedToken = crypto
-        .createHash('sha256')
-        .update(token)
-        .digest('hex');
+    const { email,token, password } = req.body;
 
     const user = await User.findOne({
-        passwordResetToken: hashedToken,
-        passwordResetExpires: { $gt: Date.now() }
+        email: email,
     });
+    console.log(email)
 
-    if(!user)
-    throw new ApiError(400, 'Invalid or expired password reset token');
+    if (!user)
+        throw new ApiError(400, 'Invalid or expired password reset token,e');
+    if(user.passwordResetToken != token)
+        throw new ApiError(400, 'Invalid or expired password reset token');
 
     user.password = password;
     user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
 
     await user.save();
 
     const tokens = generateTokens(user);
 
+    if (!tokens)
+        throw new ApiError(500, 'Error generating tokens');
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "Strict",
+        maxAge: 5 * 24 * 60 * 60 * 1000 // 5 days
+    })
     return res.status(200).json(new ApiResponse(200, {
         user: {
             id: user._id,
             username: user.username,
             email: user.email,
             role: user.role,
+            avatar: user.avatar,
+
         },
-        ...tokens
-    }, 'Password reset successfully'));     
+        accessToken: tokens.accessToken,
+        accessTokenExpiry: tokens.accessTokenExpiresIn
+    }, 'Password Changed, and logged in successfully'));
 });
 
 export default {

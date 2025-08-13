@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useSearchParams } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from '../contexts/ThemeContext';
@@ -11,9 +11,10 @@ const Login = (props) => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const { theme } = useTheme();
+    const [searchParams] = useSearchParams();
 
     // Store username and password in state
-    const [formData, setformData] = useState({ username: "", password: "" });
+    const [formData, setformData] = useState({ username: `${searchParams.get('username')?searchParams.get('username'):''}`, password: "" });
 
     // Handle input changes
     const handleInputChange = (e) => {
@@ -65,6 +66,10 @@ const Login = (props) => {
                     <div className="text-center">
                         <span className={`text-gray-600 dark:text-gray-400 ${theme === 'tos' ? 'tos-light tos-theme-mono' : theme === 'cyberpunk' ? 'text-cyan-300 neon-text' : ''}`}>Don't have an account? </span>
                         <span type="submit" className={`w-full cursor-pointer font-semibold py-2 px-4 rounded-lg transition-colors duration-200 ${theme === 'tos' ? 'tos-accent tos-theme-mono hover:tos-light' : theme === 'cyberpunk' ? 'text-cyan-300 neon-text hover:text-pink-400' : 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300'}`} onClick={() => navigate("/register")}>Sign Up</span>
+                    </div>
+                    <div className="text-center text-sm my-2">OR</div>
+                    <div className="text-center">
+                        <span type="submit" className={`w-full cursor-pointer font-semibold py-2 px-4 rounded-lg transition-colors duration-200 ${theme === 'tos' ? 'tos-accent tos-theme-mono hover:tos-light' : theme === 'cyberpunk' ? 'text-cyan-300 neon-text hover:text-pink-400' : 'text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300'}`} onClick={() => navigate("/getEmail")}>Forgot Password ?</span>
                     </div>
                 </form>
             </div>
