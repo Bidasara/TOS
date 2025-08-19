@@ -2,18 +2,19 @@ import { useState, useEffect ,useCallback} from 'react';
 import { useProblemContext } from '../../contexts/ProblemContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import Checkbox from '../common/Checkbox';
+import { useNoteModal } from '../../contexts/NoteModalContext';
+import { useScroll } from '../../contexts/ScrollContext';
 
 const Problem = ({ item:problem,elevate:elevatedProblem }) => {
-    const { updateProblemStatus, setNoteModalOpen, setNoteModalContent, updateProblemRevisedStatus, deleteProblem,openCategory,currentList, setElevatedProblem,setOpenCategory } = useProblemContext();
+    const { deleteProblem,currentList } = useProblemContext();
+    const { openCategory} = useScroll();
+    const {setNoteModalContent,setNoteModalOpen} = useNoteModal();
     const { theme } = useTheme();
     const [checked, setChecked] = useState(problem.solved === true);
-    const [showNotes, setShowNotes] = useState(false);
-    const [notes, setNotes] = useState(problem.notes || '');
     const [revised, setRevised] = useState(problem.revised === true);
 
     useEffect(() => {
         setChecked(problem.solved === true);
-        setNotes(problem.notes || '');
         setRevised(problem.revised === true);
     }, [problem.solved, problem.notes, problem.revised]);
 
@@ -35,9 +36,9 @@ const Problem = ({ item:problem,elevate:elevatedProblem }) => {
                         console.log(`Problem ${problemId}, in category ${categoryId}, in list ${listId} deleted successfully`);
                     })
                     .catch(err => {
-                        console.error(`Error deleting category ${categoryId}:`, err);
+                        console.error(`Error deleting problem ${problemId}:`, err);
                         // You could add a toast notification here
-                        alert(`Failed to delete category: ${err.message || 'Unknown error'}`);
+                        alert(`Failed to delete problem: ${err.message || 'Unknown error'}`);
                     });
             }
         }, [deleteProblem]);
@@ -109,19 +110,6 @@ const Problem = ({ item:problem,elevate:elevatedProblem }) => {
                 >
                     {problem.revised ? 'Revised' : 'Revise'}
                 </div>
-                {/* <button
-                    onClick={() => {
-                        setNoteModalContent({ problemId: problem._id, initialText: problem.notes, listId: currentList._id, categoryId: openCategory,hints:problem.problemId.hint});
-                        setNoteModalOpen(true);
-                        setElevatedProblem && setElevatedProblem(problem._id);
-                    }}
-                    className={`p-1.5 rounded-full transition-colors ${theme === 'cyberpunk' ? 'text-pink-400 hover:bg-pink-900/30 neon-text' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-500 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30'}`}
-                    title="View/Edit Notes"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-                    </svg>
-                </button> */}
                 <span onClick={(event) => handleDelete(currentList._id, openCategory,problem._id ,event)} className="material-symbols-outlined delete-icon">
                     delete
                 </span>

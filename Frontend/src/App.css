@@ -351,3 +351,32 @@ body {
   transform: none; /* Disable hover effect for locked cards */
   box-shadow: none;
 }
+
+/* Add this class to re-enable scrollbars on specific elements */
+.custom-scrollbar::-webkit-scrollbar {
+  display: block; /* Overrides the global 'display: none' */
+  width: 8px;
+}
+
+/* Style the track (the background of the scrollbar) */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+/* Style the thumb (the part you drag) */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c7c7c7;
+  border-radius: 4px;
+}
+
+/* Style the thumb on hover */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c7c7c7 #f1f1f1;
+}

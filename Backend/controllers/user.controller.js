@@ -7,6 +7,7 @@ import { Milestone } from '../models/milestones.model.js';
 import { Animation } from '../models/animation.model.js';
 import { Purchase } from '../models/purchase.model.js';
 import { DoneProblem } from '../models/doneProblems.model.js';
+import { Problem } from '../models/problem.model.js';
 
 const getUserDashboard = asyncHandler(async (req, res) => {
   const username = req.params.username || req.user.username;
@@ -14,48 +15,39 @@ const getUserDashboard = asyncHandler(async (req, res) => {
   if (!user) throw new ApiError(404, 'User not found');
 
   try {
-    const stats = await List.aggregate([
-      { $match: { owner: user._id } },
-      { $unwind: { path: '$categories', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$categories.problems', preserveNullAndEmptyArrays: true } },
+    const stats = (await DoneProblem.find({user:user._id}))[0];
+    const solvedStats = await Problem.aggregate([  
       {
-        $match: {
-          $or: [
-            { 'categories.problems.solved': true },
-            { 'categories.problems.revised': true }
-          ]
+        $match:{
+          _id: {$in:stats.solvedProblems}
         }
       },
       {
-        $group: {
-          _id: '$categories.problems.problemId',
-          solved: { $max: { $cond: ['$categories.problems.solved', 1, 0] } },
-          revised: { $max: { $cond: ['$categories.problems.revised', 1, 0] } }
-        }
-      },
-      {
-        $lookup: {
-          from: 'problems',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'problemInfo'
-        }
-      },
-      { $unwind: '$problemInfo' },
-      {
-        $group: {
-          _id: '$problemInfo.difficulty',
-          solvedCount: { $sum: '$solved' },
-          revisedCount: { $sum: '$revised' }
+        $group:{
+          _id: '$difficulty',
+          count: {$sum: 1}
         }
       }
     ]);
+    const revisedStats = await Problem.aggregate([
+      {
+        $match:{
+          _id: {$in:stats.revisedProblems}
+        }
+      },
+      {
+        $group:{ 
+          _id: '$difficulty',
+          count: {$sum: 1}
+        }
+      }
+    ])
     const userObject = user.toObject();
 
     delete userObject._id;
     delete userObject.createdAt;
     delete userObject.updatedAt;
-    return res.status(200).json(new ApiResponse(200, { user:userObject, stats }, 'User dashboard retrieved successfully'));
+    return res.status(200).json(new ApiResponse(200, { user:userObject, solvedStats,revisedStats }, 'User dashboard retrieved successfully'));
   } catch (error) {
     console.error(error);
     throw new ApiError(500, 'Dashboard aggregation failed');
@@ -359,7 +351,7 @@ const markMilestoneDone = asyncHandler(async(req,res)=>{
   const data = dataset[0];
   let diff = milestone.questionsToRevise - data.revisedProblems.length
   if(diff > 0){
-    return res.status(400).json(new ApiResponse(300,`Just ${diff} more questions to revise 🦾😊🦾`))
+    return res.status(300).json(new ApiResponse(300,`Just ${diff} more questions to revise 🦾😊🦾`))
   }
   if(milestone.rewardPixels>0){
     user.pixels += milestone.rewardPixels;

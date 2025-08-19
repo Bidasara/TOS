@@ -5,8 +5,8 @@ import dataController from '../controllers/data.controller.js';
 
 const router = express.Router();
 router.get('/recomLists', dataController.getRecommendedLists); 
-router.use(authenticateJWT);
 router.get('/allProblems', dataController.getAllProblems);
+router.use(authenticateJWT);
 router.get('/getAllLists', dataController.getAllListsByUserId);
 router.post('/addList', dataController.addListForUserId);
 router.post('/addRecomList', dataController.addRecomListForUserId);

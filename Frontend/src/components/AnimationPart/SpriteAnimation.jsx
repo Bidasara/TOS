@@ -64,7 +64,7 @@ const SpriteAnimation = ({
 
 import { useSpriteAnimation } from '../../contexts/SpriteAnimationContext.jsx';
 
-const SpriteDemo = ({move=null,pack=null,scale:scaleTo,loop=true}) => {
+const SpriteDemo = ({move=null,pack=null,scale:scaleTo,loop=true,backTo}) => {
   const {currentAnimation,setCurrentAnimation,currCharacter,setCurrCharacter,backToIdle} = useSpriteAnimation();
   
   const characterChosen = (pack!=null && pack.length === 1) ? pack[0].title : currCharacter;
@@ -96,7 +96,7 @@ const SpriteDemo = ({move=null,pack=null,scale:scaleTo,loop=true}) => {
             fps={fps}
             scale={scale}
             className=""
-            onComplete={loop?()=>{}:backToIdle}
+            onComplete={loop?()=>{}:(backTo || backToIdle)}
             loop={loop}
           />
         )}

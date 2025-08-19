@@ -1,79 +1,31 @@
-import { useState, useMemo, useCallback,useRef,useEffect } from 'react';
+import { useState,useRef,useEffect } from 'react';
 
 // --- Imports ---
 // Hooks
 import { useProblemContext } from '../contexts/ProblemContext.jsx';
 import { useTheme } from '../contexts/ThemeContext.jsx';
-import { useReviseData } from '../hooks/useReviseData.js'; // Custom Hook'
+import { useModal } from '../contexts/ModalContext.jsx';
 
 // Components
 import Scrollbar from './ProblemsListPart/Scrollbar.jsx';
 import Dropdown from './ProblemsListPart/Dropdown.jsx';
-import Notes from './common/Notes.jsx';
-import Scroll from './common/Scroll.jsx';
-import ReviseProblemItem from './ProblemsListPart/ReviseProblemItem.jsx'
-import { useSpriteAnimation } from '../contexts/SpriteAnimationContext.jsx';
+import ReviseList from './ReviseList.jsx';
 
 const Dolist = () => {
     // --- Contexts ---
-    const {
-        currentList,
-        updateProblemRevisedStatus,
-        setNoteModalOpen,
-        noteModalOpen,
-        setNoteModalContent,
-        noteModalContent,
-        setModalTitle,
-        setFunc,
-        setInputLabel,
-        setInputId,
-        setInputPlaceHolder,
-        setInputType,
-        setModalExtra,
-        setModalOpen,
-        // Omitting other context setters for brevity, assuming they are used in extracted components
-    } = useProblemContext();
+    const { currentList,data} = useProblemContext();
+    const {setModalTitle,setFunc,setInputLabel,setInputId,setInputPlaceHolder,setInputType,setModalExtra,setModalOpen} = useModal();
     const { theme } = useTheme();
-    const {currCharacter,triggerAttack} = useSpriteAnimation();
 
     // --- State ---
     const [viewMode, setViewMode] = useState('lists'); // 'lists' or 'toRevise'
-    const [selectedReviseListId, setSelectedReviseListId] = useState(null);
-    const [scale, setScale] = useState(1);
-
-    // Animation-related state
-    const [animatingProblemId, setAnimatingProblemId] = useState(null);
-    const [hidingProblemId, setHidingProblemId] = useState(null);
-    useEffect(() => {
-      setCurrentPack(getCurrentCharacterPack());
-    }, [currCharacter])
     
-    const [currentPack,setCurrentPack] = useState(getCurrentCharacterPack());
-
-    // --- Custom Hooks ---
-    const { reviseData, refetch } = useReviseData(viewMode);
-
-    // --- Derived Data (Memoized) ---
-    const selectedReviseList = useMemo(() => {
-        return reviseData.find(list => list.listId === selectedReviseListId);
-    }, [reviseData, selectedReviseListId]);
-
     // --- Refs ---
     const parentRef = useRef(null);
-
-    // --- useEffects ---
-    useEffect(() => {
-        if (parentRef.current && currentPack) {
-            const parentHeight = parentRef.current.getBoundingClientRect().height;
-            // Calculate scale based on parent height and animation frame height
-            setScale(parentHeight * (3 / 11) / currentPack.pack.break.frameHeight);
-        }
-    }, [currentPack]);
 
     // --- Callbacks (Memoized) ---
     const handleAdd = () => {
         setModalTitle("Add Category");
-        // setInputText("")
         setFunc("category");
         setInputLabel("Category Title");
         setInputId("Category");
@@ -82,46 +34,7 @@ const Dolist = () => {
         setModalExtra(currentList._id);
         setModalOpen(true);
     }
-    function getCurrentCharacterPack () {
-        try {
-            const allAnimations = localStorage.getItem('allAnimations');
-            if (!allAnimations) return null;
-            const animations = JSON.parse(allAnimations);
-            return animations.find(anim => anim.title === currCharacter) || animations[0];
-        } catch (error) {
-            console.error('Error getting current character pack:', error);
-            return null;
-        }
-    };
-
-    const handleOpenNotes = (problem) => {
-        console.log("Opening notes for problem:",problem)
-        if(!selectedReviseList)
-            return;
-        setNoteModalContent({
-            problemId: problem._id,
-            initialText: problem.notes,
-            listId: selectedReviseList.listId,
-            categoryId: problem.categoryId,
-            update: true,
-        });
-        setNoteModalOpen(true);
-    }
-    const handleMarkRevised = useCallback((listId, categoryTitle, problemId) => {
-        const anim = currentPack;
-        const delay = anim.pack.break.frames / anim.pack.break.fps;
-
-        setAnimatingProblemId(problemId);
-        triggerAttack();
-
-        setTimeout(async() => {
-            setHidingProblemId(problemId);
-            await updateProblemRevisedStatus(listId, categoryTitle, problemId);
-            refetch()
-            setAnimatingProblemId(null);
-        }, delay*1000 - 100);
-
-    }, [updateProblemRevisedStatus,currentPack,triggerAttack,refetch]);
+    
     const [workingCatAdd,setWorkingCatAdd] = useState(true);
     useEffect(() => {
       try{
@@ -141,9 +54,7 @@ const Dolist = () => {
         console.error(error);
         setWorkingCatAdd(false)
       }
-    }, [])
-    console.log(workingCatAdd)
-
+    }, [data])
 
     // --- Render ---
     return (
@@ -156,7 +67,7 @@ const Dolist = () => {
             </div>
 
             {/* Content Container */}
-            <div className="h-11/12 min-h-0 overflow-hidden w-full">
+            <div ref={parentRef} className="h-11/12 min-h-0 overflow-hidden w-full">
                 {viewMode === 'lists' && (
                     <div className="h-full flex flex-col">
                         <div className="h-1/7"><Scrollbar /></div>
@@ -167,52 +78,12 @@ const Dolist = () => {
                 )}
 
                 {viewMode === 'toRevise' && (
-                    <div className="h-full flex flex-col min-h-0">
-                        {/* List Selector */}
-                        <div className="h-1/9 m-3 flex gap-2 overflow-x-auto flex-shrink-0">
-                            {reviseData.map(list => (
-                                <button key={list.listId} onClick={() => setSelectedReviseListId(list.listId)} className={`px-3 py-2 rounded flex-shrink-0 ${selectedReviseListId === list.listId ? 'bg-blue-400 text-white' : 'bg-gray-100'}`}>
-                                    {list.listTitle}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Problems to Revise */}
-                        {selectedReviseList ? (
-                            <div ref={parentRef} className="relative h-8/9 min-h-0 overflow-y-auto pr-2">
-                                <Scroll
-                                    items={selectedReviseList.problems.filter(prob => !prob.revised)}
-                                    width={currentPack.pack.break.frameWidth * scale}
-                                    renderItem={({ item,handleClick }) => (
-                                        <ReviseProblemItem
-                                            handleClick={handleClick}
-                                            key={item._id}
-                                            item={item}
-                                            listId={selectedReviseList.listId}
-                                            categoryTitle={item.categoryTitle}
-                                            onMarkRevised={handleMarkRevised}
-                                            onOpenNotes={handleOpenNotes}
-                                            isAnimating={animatingProblemId === item._id}
-                                            isHiding={hidingProblemId === item._id}
-                                            currentPack={currentPack}
-                                            scale={scale}
-                                        />
-                                    )}
-                                />
-                            </div>
-                        ) : (
-                            <div className="text-gray-400">Select a list to see problems.</div>
-                        )}
-                    </div>
+                    <ReviseList
+                        parentRef = {parentRef}
+                        viewMode={viewMode}
+                    />
                 )}
             </div>
-
-            <Notes
-                isOpen={noteModalOpen}
-                onClose={() => setNoteModalOpen(false)}
-                {...noteModalContent}
-                refetch = {refetch}
-            />
         </div>
     );
 };

@@ -1,19 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProblemContext } from '../contexts/ProblemContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useNotification } from '../contexts/NotificationContext';
-// --- REMOVED Mock Data ---
-// The ownerLists constant has been removed, as we will now fetch data from localStorage.
 
 const popularTags = ['python', 'javascript', 'machine-learning', 'reactjs', 'sql'];
-
-// --- Helper Components ---
-
-const StarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-yellow-400">
-        <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434L10.788 3.21z" clipRule="evenodd" />
-    </svg>
-);
 
 // --- View Components ---
 
@@ -71,7 +59,6 @@ const ComingSoonPlaceholder = () => (
 const OwnerLists = () => {
     // 1. State to hold the lists. It defaults to an empty array.
     const [lists, setLists] = useState([]);
-    const { accessToken } = useAuth();
     const { addToList ,recomList} = useProblemContext();
     useEffect(() => {
     const fetchRecomLists = async () => {
@@ -117,7 +104,7 @@ const OwnerLists = () => {
         <div className="w-full md:w-2/3 h-full">
             <div className="bg-white rounded-xl h-full overflow-scroll flex flex-col gap-2 p-3 shadow-lg border border-slate-200">
                 <h3 className="font-extrabold text-2xl h-1/12 text-slate-900 ">Featured Lists</h3>
-                <div className="h-11/12 flex flex-col gap-2">
+                <div className="h-11/12 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
                     {/* 3. Map over the 'lists' state variable instead of the old mock data */}
                     {recomList.length > 0 ? (
                         recomList.map(list => (

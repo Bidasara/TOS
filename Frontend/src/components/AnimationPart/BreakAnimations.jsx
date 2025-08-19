@@ -20,6 +20,8 @@ const BreakAnimation = ({
     useEffect(() => {
     const intervalId = setInterval(() => {
         setCurrentFrame(prevFrame => {
+            if(prevFrame=== frameCount-1)
+                clearInterval(intervalId);
             const nextFrame = (prevFrame + 1) % frameCount;
             return nextFrame;
         });

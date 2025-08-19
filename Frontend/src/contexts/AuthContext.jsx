@@ -1,5 +1,6 @@
-import { createContext, useState, useContext, useEffect } from "react";
-import api from "../api";
+// AuthContext.js
+import { createContext, useState, useContext, useEffect, useCallback } from "react";
+import api, { setApiAccessToken, clearApiAccessToken } from "../api";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
@@ -10,167 +11,126 @@ export const AuthProvider = ({ children }) => {
   const [username, setUsername] = useState(() => localStorage.getItem("username") || null);
   const [avatarLink, setAvatarLink] = useState(() => localStorage.getItem("avatarLink") || null);
   const [loading, setLoading] = useState(true);
-  const [ATokenExpiry, setATokenExpiry] = useState(null);
   const [error, setError] = useState(null);
   const [cart, setCart] = useState([]);
-  const [pixels,setPixels] = useState(0);
+  const [pixels, setPixels] = useState(0);
+  const isLoggedIn = !!accessToken;
+  console.log("AuthContext re-rendered")
 
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
+  // We can combine multiple logout steps into a single function
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error("Server logout failed, proceeding with client logout:", err);
+    } finally {
+      setAccessToken(null);
+      clearApiAccessToken(); // Clear the token in the api.js module
+      setUsername(null);
+      setAvatarLink(null);
+      localStorage.clear();
+      if(!window.location.hash.includes('/login') && !window.location.hash.includes('/register') && !window.location.hash.includes('/resetPass') && !window.location.hash.includes('/getEmail'))
+      navigate('/login');
+    }
+  }, [navigate]);
 
-  useEffect(() => {
-    setLoading(true);
-  }, [])
+  // Handler for the custom logout event
+  const handleTriggerLogout = useCallback(() => {
+    logout();
+  }, [logout]);
 
+  // Handler for the custom token refresh event
+  const handleTokenRefreshed = useCallback((event) => {
+    setAccessToken(event.detail.token);
+  }, []);
+
+  // Set up event listeners on component mount
   useEffect(() => {
-    if (!accessToken) {
-      refreshAccessToken();
+    window.addEventListener('trigger-logout', handleTriggerLogout);
+    window.addEventListener('token-refreshed', handleTokenRefreshed);
+    
+    // Clean up event listeners on component unmount
+    return () => {
+      window.removeEventListener('trigger-logout', handleTriggerLogout);
+      window.removeEventListener('token-refreshed', handleTokenRefreshed);
+    };
+  }, [handleTriggerLogout, handleTokenRefreshed]);
+
+  // This effect synchronizes the API token with the state
+  useEffect(() => {
+    if (accessToken) {
+      setApiAccessToken(accessToken);
     } else {
-      const isExpired = ATokenExpiry && new Date() >= new Date(ATokenExpiry);
-      if (isExpired) {
-        console.log("refreshToken expired")
-        refreshAccessToken();
+      clearApiAccessToken();
+    }
+  }, [accessToken]);
+
+  // Initial token refresh check
+  useEffect(() => {
+    if(accessToken)
+      return;
+    const refreshAndSetUser = async () => {
+      try {
+        const res = await api.post('/auth/refresh-token');
+        const newAccessToken = res.data.data.accessToken;
+        
+        // Update both the context state and the api module's variable
+        setAccessToken(newAccessToken);
+        setApiAccessToken(newAccessToken);
+        
+        // Set user info from localStorage if available
+        setUsername(res.data.data.username);
+        localStorage.setItem('username',JSON.stringify(res.data.data.username));
+        setAvatarLink(res.data.data.avatar);
+        localStorage.setItem('avatarLink',JSON.stringify(res.data.data.avatar));
+
+      } catch (err) {
+        console.error("Initial token refresh failed. User is not logged in or session expired.");
+        // Logout if refresh fails
+        logout();
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [accessToken, ATokenExpiry]);
+    };
 
-  const getCart = async () => {
-    try {
-      const response = await api.get('/user/cart', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
-      console.log("Cart retrieved successfully:", response.data);
-      setCart(response.data.data);
-    } catch (error) {
-      console.error("Error retrieving cart:", error);
-      setError("Failed to retrieve cart. Please try again.");
-    }
-  }
-
-  const addToCart = async (animationId) => {
-    try {
-      const response = await api.post(`/user/cart/:${animationId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-      console.log("Animation added to cart successfully:", response.data);
-      setCart(response.data.data);
-    } catch (error) {
-      console.error("Error adding animation to cart:", error);
-      setError("Failed to add animation to cart. Please try again.");
-    }
-  }
-
-  const removeFromCart = async (animationId) => {
-    try {
-      const response = await api.delete(`/user/cart/:${animationId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-      console.log("Animation removed from cart successfully:", response.data);
-      setCart(response.data.data);
-    } catch (error) {
-      console.error("Error removing animation from cart:", error);
-      setError("Failed to remove animation from cart. Please try again.");
-    }
-  }
-  
+    refreshAndSetUser();
+  }, []);
 
   const login = async (formData) => {
     try {
-      const response = await api.post("/auth/login", formData, {
-        withCredentials: true,
-      });
-      console.log(response)
+      const response = await api.post("/auth/login", formData);
 
-      const { accessToken, user, accessTokenExpiry, refreshTokenExpiry } = response.data.data;
-      setAccessToken(accessToken); // Store accessToken in memory
-      setATokenExpiry(accessTokenExpiry);
+      const { accessToken, user } = response.data.data;
+      setAccessToken(accessToken);
+      setApiAccessToken(accessToken); // Synchronize token with the api.js module
       setUsername(user.username);
       setAvatarLink(user.avatar);
       localStorage.setItem("username", user.username);
       localStorage.setItem("avatarLink", user.avatar);
       navigate("/");
     } catch (error) {
-      console.log(error)
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
-      } else {
-        setError("Login failed. Please try again.");
-      }
-    }
-  }
-
-  const logout = async () => {
-    try {
-      await api.post('/auth/logout', { withCredentials: true });
-    } catch (err) {
-      console.error("Server logout failed, proceeding with client logout:", error)
-    } finally {
-      // This block runs whether the try succeeds or fails
-      setAccessToken(null);
-      setUsername(null);
-      setAvatarLink(null);
-      localStorage.clear();
-      localStorage.removeItem('username');
-      localStorage.removeItem('avatarLink');
-      localStorage.removeItem('userData');
-      // No need to dispatch a custom event if the state change handles it
-      window.dispatchEvent(new Event("user-logged-out"));
-      navigate('/login');
+      setError(error.response?.data?.message || "Login failed. Please try again.");
     }
   };
 
-  const refreshAccessToken = async () => {
-    try {
-      const res = await api.post('/auth/refresh-token', {
-        withCredentials: true,
-      });
 
-      setAccessToken(res.data.data.accessToken);
-      const storedUsername = localStorage.getItem('username');
-      const storedAvatarLink = localStorage.getItem('avatarLink');
-      if (storedUsername) {
-        setUsername(storedUsername);
-      }
-      if (storedAvatarLink) {
-        setAvatarLink(storedAvatarLink);
-      }
-    } catch (err) {
-      if (err.response?.status !== 403 && err.response?.status !== 400) {
-        console.error("Token refresh failed:", err);
-      }
-      logout();
-      setAccessToken(null);
-    } finally {
-      setLoading(false);
-    }
+  const value = {
+    accessToken,
+    username,
+    avatarLink,
+    loading,
+    isLoggedIn,
+    logout,
+    login,
+    cart,
+    setCart,
+    pixels,
+    setPixels,
   };
-
-  const isLoggedIn = !!accessToken;
 
   return (
-    <AuthContext.Provider value={{
-      accessToken,
-      setAccessToken,
-      username,
-      setUsername,
-      avatarLink,
-      setAvatarLink,
-      loading,
-      setLoading,
-      isLoggedIn,
-      logout,
-      ATokenExpiry,
-      setATokenExpiry,
-      login
-    }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {loading ? <div>Loading...</div> : children}
     </AuthContext.Provider>
   );
 };

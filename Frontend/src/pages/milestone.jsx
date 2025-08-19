@@ -4,12 +4,26 @@ import React, { useState, useEffect } from 'react';
 import MilestoneCard from '../components/MilestoneCard';
 import { useProblemContext } from '../contexts/ProblemContext';
 import api from '../api';
+import { useNotification } from '../contexts/NotificationContext';
 
-// --- Mock Data ---
-// In a real app, this would come from your backend API
-// -----------------
 
 const MilestonesPage = () => {
+    const { showNotification } = useNotification();
+    const handleClaim = async (milestoneId) => {
+        try {
+            // This is the same API call from MilestoneCard
+            await api.patch(`/user/markMilestoneDone/${milestoneId}`);
+            
+            // On success, re-fetch the user's progress. This will update state and localStorage.
+            await getMilestonesDone();
+            
+            showNotification("Milestone Claimed!", "success");
+
+        } catch (error) {
+            console.error(error);
+            showNotification(error.response?.data?.data || 'Already Done or Can\'t Claim at the moment', 'error');
+        }
+    };
     const getMilestones = async () => {
         const data = localStorage.getItem('milestones');
         if (data) {
@@ -46,7 +60,7 @@ const MilestonesPage = () => {
     //   const [pixels, setPixels] = useState(1250);
     const [milestones, setMilestones] = useState([]);
     const { pixels,setPixels } = useProblemContext();
-    const [milestonesDone, setMilestonesDone] = useState(localStorage.getItem('milestonesDone'));
+    const [milestonesDone, setMilestonesDone] = useState(localStorage.getItem('milestonesDone') || []);
 
     // In a real app, you would have functions here to handle claiming rewards
     // which would update the state and make an API call.
@@ -69,6 +83,7 @@ const MilestonesPage = () => {
                             description={milestone.condition}
                             rewardText={milestone}
                             status={true}
+                            onClaim={handleClaim}
                         />
                     ):null
                 ))}

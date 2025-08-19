@@ -1,10 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCart } from '../hooks/useCart';
-
-// --- MOCK DATA ---
-// In a real app, this would come from a context (like useCart()) or props.
-
-// --- Sub-components for better organization ---
 
 const CartItem = ({ item, onRemove }) => {
     return (
@@ -17,7 +12,7 @@ const CartItem = ({ item, onRemove }) => {
                     style={{imageRendering:'pixelated'}}
                 />
                 <div>
-                    <p className="font-semibold text-gray-800">{item.title}Set</p>
+                    <p className="font-semibold text-gray-800">{item.title} Set</p>
                     <p className="text-sm text-gray-500">₹{item.price.toFixed(2)}</p>
                 </div>
             </div>

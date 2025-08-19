@@ -10,7 +10,6 @@ export const useReviseData = (viewMode) => {
 
     const fetchReviseData = useCallback(async () => {
         if (!accessToken) return;
-        console.log("refetched")
 
         setIsLoading(true);
         setError(null);
@@ -18,7 +17,9 @@ export const useReviseData = (viewMode) => {
             const response = await api.get('data/reviseList', {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
-            setReviseData(response.data.data || []);
+            const newData = response.data.data || [];
+            setReviseData(newData);
+            return newData;
         } catch (err) {
             console.error("Failed to fetch revision data:", err);
             setError(err);

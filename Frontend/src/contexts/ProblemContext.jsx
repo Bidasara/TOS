@@ -1,206 +1,190 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+
+// Local Imports
 import api from "../api";
 import { useAuth } from './AuthContext';
-import { setAccessToken } from '../authToken';
 import { useNotification } from './NotificationContext.jsx';
+import { useModal } from './ModalContext.jsx';
+import { useScroll } from './ScrollContext.jsx';
 
-// Create the context
+//==============================================================================
+// CONTEXT CREATION
+//==============================================================================
+
+// Create the context to hold problem-related data and functions
 const ProblemContext = createContext();
 
-// Create a provider component
+//==============================================================================
+// PROVIDER COMPONENT
+//==============================================================================
+
 export const ProblemProvider = ({ children }) => {
-  const {showNotification} = useNotification();
+  //----------------------------------------------------------------------------
+  // HOOKS
+  //----------------------------------------------------------------------------
 
-  // variables for modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const onModalClose = () => {
-    setModalOpen(false);
-  }
-  const [func, setFunc] = useState("");
-  const [modalTitle, setModalTitle] = useState("");
-  const [inputText, setInputText] = useState("");
-  const [inputLabel, setInputLabel] = useState("");
-  const [inputId, setInputId] = useState("2");
-  const [inputType, setInputType] = useState("number");
-  const [inputPlaceHolder, setInputPlaceHolder] = useState("");
-  const [modalExtra, setModalExtra] = useState("");
-  function onChange(e) {
-    setInputText(e.target.value);
-  }
-  function onQueryChange(query){
-    setInputText(query);
-  }
-
-  const [pixels,setPixels] = useState(0);
-  
-
-  // ===== AUTHENTICATION =====
+  // External hooks for authentication and notifications
   const { accessToken } = useAuth();
+  const { showNotification } = useNotification();
+  const { setModalOpen,query,setQuery } = useModal();
+  const { openCategory, setOpenCategory,
+          setElevatedCategory, setElevatedProblem } = useScroll();
 
-  // ===== MAIN DATA STATE =====
-  // data: Main data structure containing all user's lists and their categories/problems
-  // Structure: { lists: [{ _id, title, categories: [{ _id, title, problems: [{ _id, title, solved, ... }] }] }] }
+  //----------------------------------------------------------------------------
+  // STATE MANAGEMENT
+  //----------------------------------------------------------------------------
+
+  // ===== Core Data State =====
+  // `data`: Main object holding the user's lists, categories, and problems.
   const [data, setData] = useState({ lists: [] });
+  // `problems`: A flat list of all possible problems (e.g., from LeetCode).
   const [problems, setProblems] = useState([]);
-
-  // recomList: Array of recommended lists from admin/backend
-  // These are pre-made lists that users can add to their personal lists
+  // `recomList`: Pre-made lists from the backend that users can add.
   const [recomList, setRecomList] = useState([]);
 
-  // ===== CURRENT SELECTION STATE =====
-  // currentList: Currently selected/active list object
-  // This is the list that the user is currently viewing and working with
+  // ===== Current Selection State =====
+  // `currentList`: The list the user is currently viewing.
   const [currentList, setCurrentList] = useState(data?.lists[0] || {});
 
-  // ===== UI STATE =====
-  // elevatedCategory: Stores the _id of the category that should be visually elevated/highlighted
-  const [elevatedCategory, setElevatedCategory] = useState(null)
-  const [openNote, setOpenNote] = useState(false);
+  // ===== Statistics State =====
+  const [totalSolved, setTotalSolved] = useState(0);
+  const [totalRevised, setTotalRevised] = useState(0);
+  const [totalProblems, setTotalProblems] = useState(0);
+  const [pixels, setPixels] = useState(0);
 
-  // openCategory: Stores the currently open/expanded category object
-  // When a category is clicked, it becomes the openCategory and shows its problems
-  const [openCategory, setOpenCategory] = useState(null)
+  //----------------------------------------------------------------------------
+  // DATA FETCHING & INITIALIZATION (EFFECTS)
+  //----------------------------------------------------------------------------
 
-  // ===== STATISTICS STATE =====
-  // totalSolved: Total number of problems marked as solved across all lists
-  const [totalSolved, setTotalSolved] = useState(0)
-  const [totalRevised, setTotalRevised] = useState(0)
-  // totalProblems: Total number of problems across all lists
-  const [totalProblems, setTotalProblems] = useState(0)
-  // elevatedProblem: Stores the _id of the currently elevated problemnote
-  const [elevatedProblem, setElevatedProblem] = useState(null);
-
-  // ===== NOTE MODAL STATE =====
-  const [noteModalOpen, setNoteModalOpen] = useState(false);
-  const [noteModalContent, setNoteModalContent] = useState({});
-
-  // ===== INITIALIZATION EFFECTS =====
-  // Fetch recommended lists from backend or localStorage on component mount
+  // Effect to fetch the list of ALL possible problems (from cache or API)
   useEffect(() => {
+    console.log("fetchAllProblems")
     const fetchAllProblems = async () => {
-      const allProblems = localStorage.getItem("allProblems");
-      if (allProblems) {
+      const cachedProblems = localStorage.getItem("allProblems");
+      if (cachedProblems) {
         try {
-          setProblems(JSON.parse(allProblems));
-          return;
+          setProblems(JSON.parse(cachedProblems));
+          setTotalProblems(JSON.parse(cachedProblems).length);
         } catch (err) {
-          console.error("Error parsing allProblems data", err);
+          console.error("Error parsing cached 'allProblems' data", err);
         }
       } else {
         try {
           const response = await api.get('/data/allProblems');
-          setProblems(response.data.data.problems);
-          const tots = response.data?.data?.totalProblems;
-          setTotalProblems(tots);
-          localStorage.setItem("TotsProbs", JSON.stringify(tots));
-          localStorage.setItem("allProblems", JSON.stringify(response.data.data.problems));
+          console.log(response)
+          const fetchedProblems = response.data.data.problems;
+          const total = response.data?.data?.totalProblems;
+          setProblems(fetchedProblems);
+          setTotalProblems(total);
+          localStorage.setItem("allProblems", JSON.stringify(fetchedProblems));
+          localStorage.setItem("TotsProbs", JSON.stringify(total));
         } catch (error) {
-          console.error("error fetching all problems", error);
+          console.error("Error fetching all problems from API", error);
           setProblems([]);
         }
       }
-    }
+    };
     fetchAllProblems();
-  }, [])
+  }, [accessToken]);
+
+  // Effect to fetch recommended lists (from cache or API)
   useEffect(() => {
     const fetchRecomLists = async () => {
-      const storedData = localStorage.getItem("recomLists");
-      if (storedData) {
+      const cachedRecomLists = localStorage.getItem("recomLists");
+      if (cachedRecomLists) {
         try {
-          setRecomList(JSON.parse(storedData));
-          return;
+          setRecomList(JSON.parse(cachedRecomLists));
         } catch (err) {
-          console.error("Error parsing data", err);
+          console.error("Error parsing cached 'recomLists' data", err);
         }
       } else {
         try {
           const response = await api.get('/data/recomLists');
-          setRecomList(response.data.data);
-          localStorage.setItem("recomLists", JSON.stringify(response.data.data));
+          const fetchedLists = response.data.data;
+          setRecomList(fetchedLists);
+          localStorage.setItem("recomLists", JSON.stringify(fetchedLists));
         } catch (error) {
-          console.error("Error fetching recommended lists", error);
+          console.error("Error fetching recommended lists from API", error);
           setRecomList([]);
         }
       }
     };
     fetchRecomLists();
-  }, []);
+  }, [accessToken]);
 
-  // Fetch user's data from backend or localStorage on component mount
+  // Effect to fetch user-specific data when the access token changes (e.g., on login)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUserData = async () => {
+      // First, try to load user data from localStorage for a faster experience
       const storedData = localStorage.getItem("userData");
       if (storedData) {
         try {
           const parsedData = JSON.parse(storedData);
           setData(parsedData);
           setCurrentList(parsedData.lists[0] || {});
-          return;
+          setPixels(JSON.parse(localStorage.getItem("Pixels")) || 0);
+          setTotalProblems(JSON.parse(localStorage.getItem("TotsProbs")) || 0);
+          return; // Exit if cached data is loaded successfully
         } catch (err) {
-          console.error("Error parsing data", err);
-        }
-      } else {
-        try {
-          const response = await api.get('/data/getAllLists', {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
-          const fetchedData = response.data?.data;
-          setData(fetchedData);
-          const tots = response.data?.data?.totalProblems;
-          setTotalProblems(tots);
-          setPixels(response.data?.data?.pixels);
-          localStorage.setItem("Pixels",JSON.stringify(response.data?.data?.pixels));
-          localStorage.setItem("TotsProbs", JSON.stringify(tots));
-          setCurrentList(fetchedData.lists[0] || {});
-          localStorage.setItem("userData", JSON.stringify(fetchedData));
-        } catch (error) {
-          console.error("Error fetching user data", error);
-          setData({ lists: [] });
-          setCurrentList({});
+          console.error("Error parsing cached 'userData'", err);
         }
       }
-    };
-    const fetchTotsProbs = async () => {
-      const totsProbs = localStorage.getItem("TotsProbs");
-      if (totsProbs) {
-        try {
-          const parsedData = JSON.parse(totsProbs);
-          setTotalProblems(parsedData);
-          return;
-        } catch (err) {
-          console.error("Error parsing data", err);
-        }
+
+      // If no cached data, fetch from the API
+      try {
+        const response = await api.get('/data/getAllLists', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const fetchedData = response.data?.data;
+        setData(fetchedData);
+        setCurrentList(fetchedData.lists[0] || {});
+        setPixels(fetchedData.pixels || 0);
+        setTotalProblems(fetchedData.totalProblems || 0);
+
+        // Cache the fetched data
+        localStorage.setItem("userData", JSON.stringify(fetchedData));
+        localStorage.setItem("Pixels", JSON.stringify(fetchedData.pixels || 0));
+        localStorage.setItem("TotsProbs", JSON.stringify(fetchedData.totalProblems || 0));
+      } catch (error) {
+        console.error("Error fetching user data from API", error);
+        resetData(); // Reset state on error
       }
     };
-     if (accessToken) {
-        fetchData();
-        fetchTotsProbs();
+
+    if (accessToken) {
+      fetchUserData();
     } else {
-        setData({ lists: [] });
-        setCurrentList({});
-        setTotalProblems(0);
+      resetData();
     }
   }, [accessToken]);
 
-  // ===== HELPER FUNCTIONS =====
-  // getTotalSolved: Calculates total number of solved problems across all lists
-  // Returns: number (total count of problems where solved: true)
-  const getTotalSolved = async () => {
-    try{
-      const response = await api.get('/data/solvedAndRevised')
-      console.log(response.data.data)
-      setTotalSolved(response.data.data.solved)
-      setTotalRevised(response.data.data.revised)
-    }
-    catch(err){
-      console.error(err);
-    }
-  }
+  // Effect to persist the currently open category for a specific list
+  useEffect(() => {
+    if (!currentList?._id) return;
 
-  // getAllProblems: Calculates total number of problems
-  // Returns: number (total count of all problems)
+    const listId = currentList._id;
+    const isValidOpenCategory = currentList.categories.some(cat => cat._id === openCategory);
 
-  // ... inside ProblemProvider
+    if (isValidOpenCategory) {
+      // If the open category is valid for the current list, do nothing.
+    } else {
+      // Otherwise, try to load the last known open category for this list from localStorage.
+      const lastOpenCategory = localStorage.getItem(`openCategory_${listId}`);
+      if (currentList.categories.some(cat => cat._id === lastOpenCategory)) {
+        setOpenCategory(lastOpenCategory);
+      }
+    }
+  }, [currentList?._id, currentList?.categories]);
+
+
+  //----------------------------------------------------------------------------
+  // HELPER & UTILITY FUNCTIONS
+  //----------------------------------------------------------------------------
+
+  /**
+   * Resets all user-related state and clears relevant localStorage items.
+   * Typically called on logout or auth error.
+   */
   const resetData = () => {
     setData({ lists: [] });
     setCurrentList({});
@@ -208,531 +192,391 @@ export const ProblemProvider = ({ children }) => {
     setOpenCategory(null);
     setTotalSolved(0);
     setTotalProblems(0);
-    setAccessToken(null);
-    localStorage.removeItem("userData");
+    localStorage.clear();
   };
 
-  // ===== CRUD OPERATIONS FOR LISTS =====
-
-  // addToList: Adds a recommended list to user's personal lists
-  // Parameters: listId (string) - _id of the list to add
-  // Action: Finds list in recomList, adds to data.lists, sets as currentList
-  const deleteList = async (listId) => {
+  /**
+   * Fetches the total counts of solved and revised problems from the backend.
+   */
+  const getTotalSolved = async () => {
     try {
-      const response = await api.delete('/data/deleteList', {
-        data: {
-          listId: listId
-        }
-      }, {
+      const response = await api.get('/data/solvedAndRevised');
+      setTotalSolved(response.data.data.solved);
+      setTotalRevised(response.data.data.revised);
+    } catch (err) {
+      console.error("Error fetching solved/revised counts:", err);
+    }
+  };
+
+
+  //----------------------------------------------------------------------------
+  // API/CRUD FUNCTIONS - LISTS
+  //----------------------------------------------------------------------------
+
+  /**
+   * Adds a new, empty list for the user.
+   * @param {string} title - The title for the new list.
+   */
+  const addEmptyList = async (title) => {
+    try {
+      const response = await api.post('/data/addList', { title });
+      const newList = response?.data?.data?.list;
+      const updatedData = { ...data, lists: [...data.lists, newList] };
+
+      setData(updatedData);
+      setCurrentList(newList);
+      setElevatedCategory(null);
+      localStorage.setItem("userData", JSON.stringify(updatedData));
+    } catch (error) {
+      console.error("Error adding empty list:", error);
+    }
+  };
+
+  /**
+   * Adds a pre-made recommended list to the user's collection.
+   * @param {string} listId - The _id of the recommended list to add.
+   */
+  const addToList = async (listId) => {
+    const listToAdd = recomList.find(list => list._id === listId);
+    if (!listToAdd) return console.error("Recommended list not found");
+    if (data?.lists?.find(list => list.title === listToAdd.title)) {
+      return showNotification("A list with this name already exists", "error");
+    }
+
+    try {
+      const response = await api.post('/data/addRecomList', { listId }, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      console.log("Deleted List:", response.data);
-      setData(prevData => ({
-        ...prevData,
-        lists: prevData.lists.filter(list => list._id !== listId)
-      }));
-      localStorage.setItem("userData", JSON.stringify({ ...data, lists: data.lists.filter(list => list._id !== listId) }));
+
+      const createdList = response.data.data.list;
+      const updatedData = { ...data, lists: [...data.lists, createdList] };
+
+      setData(updatedData);
+      setCurrentList(createdList);
+      setOpenCategory(null);
+      setElevatedCategory(null);
+      localStorage.setItem("userData", JSON.stringify(updatedData));
+      showNotification("Successfully added recommended list", "success");
+    } catch (error) {
+      showNotification("Error adding list to database", "error");
+      console.error("Error adding recommended list:", error);
+    }
+  };
+
+  /**
+   * Deletes a user's list.
+   * @param {string} listId - The _id of the list to delete.
+   */
+  const deleteList = async (listId) => {
+    try {
+      await api.delete('/data/deleteList', {
+        data: { listId },
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+
+      const updatedLists = data.lists.filter(list => list._id !== listId);
+      const updatedData = { ...data, lists: updatedLists };
+
+      setData(updatedData);
+      // If the deleted list was the current one, switch to the first available list
+      if (currentList._id === listId) {
+        setCurrentList(updatedLists[0] || {});
+      }
+      localStorage.setItem("userData", JSON.stringify(updatedData));
     } catch (error) {
       console.error("Error deleting list:", error);
     }
   };
-  const addToList = async (listId) => {
-    const newList = recomList.find(list => list._id === listId);
-    if (!newList) {
-      console.error("Recommended list not found");
-      return;
-    }
-    else
-      console.log("Found recomlist")
-    console.log(listId,"-",data)
-    if (data?.lists?.find(list => list.title === newList.title)) {
-      showNotification("A list with this name already exists","error");
-      return;
-    }
-    else
-      console.log("ALready not present")
 
-    try {
-      const response = await api.post('/data/addRecomList', {
-        listId: listId
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
+  //----------------------------------------------------------------------------
+  // API/CRUD FUNCTIONS - CATEGORIES
+  //----------------------------------------------------------------------------
 
-      // Use the list returned from the backend
-      const createdList = response.data.data.list;
-      console.log("Created List:", createdList);
-
-      // Only update state if API call was successful
-      setData(prevData => ({
-        ...prevData,
-        lists: [...prevData.lists, createdList]
-      }));
-
-      setCurrentList(createdList);
-      setOpenCategory(null);
-      setElevatedCategory(null);
-      // setOpenCategory(null);
-
-      // Update localStorage with new data
-      const updatedData = { ...data, lists: [...data.lists, createdList] };
-      localStorage.setItem("userData", JSON.stringify(updatedData));
-
-      showNotification("Successfully added recommended list","success");
-    } catch (error) {
-      showNotification("Error adding to database","error")
-      console.error(error)
-      // Don't update state if API call failed
-    }
-  };
-
-  // addEmptyList: Creates a new empty list via API call
-  // Parameters: title (string) - title of the new list
-  // Action: POSTs to backend, adds new list to data.lists, sets as currentList
-  const addEmptyList = async (title) => {
-    try {
-      const response = await api.post('/data/addList', { title: title })
-      const newList = response?.data?.data?.list;
-      setData(prevData => ({
-        ...prevData,
-        lists: [...prevData?.lists, newList]
-      }));
-      localStorage.setItem("userData", JSON.stringify({ ...data, lists: [...data.lists, newList] }));
-      setCurrentList(newList);
-      setElevatedCategory(null);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  // ===== CRUD OPERATIONS FOR CATEGORIES =====
-
-  // addCategory: Creates a new category in a list via API call
-  // Parameters: listId (string), categoryTitle (string)
-  // Action: POSTs to backend, updates the specific list with new category
-
-  const deleteCategory = async (listId, categoryId) => {
-    try {
-      const response = await api.delete('/data/deleteCategory', {
-        data: {
-          listId: listId,
-          categoryId: categoryId
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-      setData(prevData => {
-        const newData = {
-          ...prevData,
-          lists: prevData.lists.map(list =>
-            list._id === listId
-              ? {
-                ...list,
-                categories: list.categories.filter(category => category._id !== categoryId)
-              }
-              : list
-          )
-        };
-        localStorage.setItem("userData", JSON.stringify(newData));
-        return newData;
-      });
-      setOpenCategory(null);
-      console.log("Category deleted successfully");
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      console.error("Error details:", error.response?.data || error.message);
-      throw error; // Re-throw to let the calling component handle it
-    }
-  };
-  useEffect(() => {
-    const fetchPixels = async () =>{
-      const storedData = localStorage.getItem("Pixels");
-        if (storedData) {
-          try {
-            const parsedData = JSON.parse(storedData);
-            setPixels(parsedData);
-            return;
-          } catch (err) {
-            console.error("Error parsing pixels", err);
-          }
-        } else {
-          try {
-            const response = await api.get('/data/getAllLists', {
-              headers: { Authorization: `Bearer ${accessToken}` }
-            });
-            const fetchedData = response.data?.data;
-            setData(fetchedData);
-            const tots = response.data?.data?.totalProblems;
-            setTotalProblems(tots);
-            setPixels(response.data?.data?.pixels);
-            localStorage.setItem("Pixels",JSON.stringify(response.data?.data?.pixels));
-            localStorage.setItem("TotsProbs", JSON.stringify(tots));
-            setCurrentList(fetchedData.lists[0] || {});
-            localStorage.setItem("userData", JSON.stringify(fetchedData));
-          } catch (error) {
-            console.error("Error fetching user data", error);
-            setData({ lists: [] });
-            setCurrentList({});
-          }
-        }
-    }
-    fetchPixels();
-  }, [])
-  
-  const updateProblemRevisedStatus = async (listId, titleCategory, probId) => {
-    try {
-      const response = await api.patch('/data/markRevised', { listId, titleCategory, probId }, { headers: { Authorization: `Bearer ${accessToken}` } });
-      setPixels(response.data?.data)
-      localStorage.setItem("Pixels",JSON.stringify(response.data?.data));
-      setData(prevData => {
-        const newData = {
-          ...prevData,
-          lists: prevData.lists.map(list =>
-            list._id === listId
-              ? {
-                ...list,
-                categories: list.categories.map(category =>
-                  category.title === titleCategory
-                    ? {
-                      ...category,
-                      problems: category.problems.map(problem =>
-                        problem._id === probId
-                          ? { ...problem, revised: true }
-                          : problem
-                      )
-                    }
-                    : category
-                )
-              }
-              : list
-          )
-        };
-        localStorage.setItem("userData", JSON.stringify(newData));
-        return newData;
-      });
-      // Update localStorage with new data
-      console.log("Problem revised status updated successfully");
-    } catch (error) {
-      console.error("Error updating problem revised status:", error);
-    }
-  }
-
-
-  const addCategory = async (listId) => {
+  /**
+   * Adds a new category to a specified list.
+   * @param {string} listId - The _id of the list to add the category to.
+   */
+  const addCategory = async (query,listId) => {
     setModalOpen(false);
     try {
-      const response = await api.patch('/data/addCategory', {
-        listId: listId,
-        title: inputText
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
+      const response = await api.patch('/data/addCategory',
+        { listId: listId, title: query },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+
       const newCategory = {
         _id: response.data.data,
-        title: inputText,
+        title: query,
         problems: []
-      }
-      setData(prevData => {
-        const newData = {
-          ...prevData,
-          lists: prevData.lists.map(list =>
-            list._id === listId
-              ? {
-                ...list,
-                categories: [...list.categories, newCategory]
-              }
-              : list
-          )
-        };
-        localStorage.setItem("userData", JSON.stringify(newData));
-        setOpenCategory(newCategory._id)
-        return newData;
-      });
+      };
+
+      const updatedData = {
+        ...data,
+        lists: data.lists.map(list =>
+          list._id === listId
+            ? { ...list, categories: [...list.categories, newCategory] }
+            : list
+        )
+      };
+
+      setData(updatedData);
+      setOpenCategory(newCategory._id);
+      localStorage.setItem("userData", JSON.stringify(updatedData));
     } catch (err) {
-      console.log(err)
+      console.error("Error adding category:", err);
     }
-    setInputText("");
   };
 
-  // ===== CRUD OPERATIONS FOR PROBLEMS =====
-
-  // updateProblemStatus: Marks a problem as solved via API call
-  // Parameters: listId, categoryId, problemId (strings), status (boolean)
-  // Action: POSTs to backend, updates problem.solved to true in local state
-
-  const deleteProblem = async (listId, categoryId, problemId) => {
+  /**
+   * Deletes a category from a specified list.
+   * @param {string} listId - The _id of the list containing the category.
+   * @param {string} categoryId - The _id of the category to delete.
+   */
+  const deleteCategory = async (listId, categoryId) => {
     try {
-      const response = await api.delete('/data/deleteProblem', {
-        data: {
-          listId: listId,
-          categoryId: categoryId,
-          problemId: problemId
-        }
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+      await api.delete('/data/deleteCategory', {
+        data: { listId, categoryId },
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
-      console.log("Response from deleteProblem:", response);
-      setData(prevData => {
-        const newData = {
-          ...prevData,
-          lists: prevData.lists.map(list =>
-            list._id === listId
-              ? {
-                ...list,
-                categories: list.categories.map(category =>
-                  category._id === categoryId
-                    ? {
-                      ...category,
-                      problems: category.problems.filter(problem => problem._id !== problemId)
-                    }
-                    : category
-                )
-              }
-              : list
-          )
-        };
-        localStorage.setItem("userData", JSON.stringify(newData));
-        return newData;
-      });
-      console.log("Problem deleted successfully");
+
+      const updatedData = {
+        ...data,
+        lists: data.lists.map(list =>
+          list._id === listId
+            ? { ...list, categories: list.categories.filter(cat => cat._id !== categoryId) }
+            : list
+        )
+      };
+
+      setData(updatedData);
+      setOpenCategory(null);
+      localStorage.setItem("userData", JSON.stringify(updatedData));
     } catch (error) {
-      console.error("Error deleting problem:", error);
-    }
-  };
-  const updateProblemStatus = async (listId, categoryId, problemId, note, addToRevise) => {
-    try {
-      const response = await api.patch('/data/submit', {
-        listId: listId,
-        catId: categoryId,
-        probId: problemId,
-        notes: note,
-        addToRevise: addToRevise
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
-      console.log(response.data?.data)
-      setPixels(response.data?.data)
-      localStorage.setItem("Pixels",JSON.stringify(response.data?.data));
-      setData(prevData => {
-        const newData = {
-          ...prevData,
-          lists: prevData.lists.map(list =>
-            list._id === listId
-              ? {
-                ...list,
-                categories: list.categories.map(category =>
-                  category._id === categoryId
-                    ? {
-                      ...category,
-                      problems: category.problems.map(problem =>
-                        problem._id === problemId
-                          ? { ...problem, solved: true, notes: note, revised: addToRevise === false ? true : false, toRevise: addToRevise ? (new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)) : null }
-                          : problem
-                      )
-                    }
-                    : category
-                )
-              }
-              : list
-          )
-        }
-        localStorage.setItem("userData", JSON.stringify(newData));
-        return newData;
-      });
-    }
-    catch (err) {
-      console.error("Error updating problem status:", err);
+      console.error("Error deleting category:", error);
+      throw error;
     }
   };
 
-  // addProblem: Adds a new problem to a category (local state only)
-  // Parameters: listId, categoryId (strings), problemTitle (string), difficulty (string, default: 'Medium')
-  // Action: Adds new problem to local state, doesn't persist to backend
-  const addProblem = async (data) => {
-    const { listId, catId } = data;
-    const probNum = parseInt(inputText);
-    if (currentList._id === listId) {
-      for (const cat of currentList.categories) {
-        if (cat._id === catId) {
-          for (const prob of cat.problems) {
-            if (prob.problemId.num == probNum){
-              showNotification('This Problem already exists in current Category','error');
-              return;
-            }
-          }
-        }
-      }
+  //----------------------------------------------------------------------------
+  // API/CRUD FUNCTIONS - PROBLEMS
+  //----------------------------------------------------------------------------
+
+  /**
+   * Adds a problem to a category by its number.
+   * @param {object} data - Contains listId and catId.
+   */
+  const addProblem = async (query,ids) => {
+    const { listId, catId } = ids;
+    const probNum = parseInt(query);
+    console.log(data,":><:",probNum)
+
+    // Prevent adding a duplicate problem to the same category
+    const category = currentList.categories.find(cat => cat._id === catId);
+    if (category?.problems.some(p => p.problemId.num === probNum)) {
+      showNotification('This problem already exists in the current category.', 'error');
+      return;
     }
-    setModalOpen(false)
-    let newProblem = null;
+
+    setModalOpen(false);
     try {
-      const response = await api.patch('/data/addProblem', {
-        listId: listId,
-        catId: catId,
-        probNum: probNum
-      })
-      newProblem = {
-        problemId: {
-          _id: response.data.data.prob._id,
-          num: response.data.data.prob.num,
-          title: response.data.data.prob.title,
-          difficulty: response.data.data.prob.difficulty,
-          link: response.data.data.prob.link,
-          hint: response.data.data.prob.hint,
-          tag: response.data.data.prob.tag
-        },
-        _id: response.data.data.p_id,
+      const response = await api.patch('/data/addProblem', { listId, catId, probNum });
+      const { prob, p_id } = response.data.data;
+
+      const newProblem = {
+        _id: p_id,
         solved: false,
         revised: false,
-        notes: ""
+        notes: "",
+        problemId: { ...prob }
       };
-      setData(prevData => {
-        const newData = {
-          ...prevData,
-          lists: prevData.lists.map(list => {
-            if (list._id === listId) {
-              return {
-                ...list,
-                categories: list.categories.map(category => {
-                  if (category._id === catId) {
-                    return {
-                      ...category,
-                      problems: [...category.problems, newProblem],
-                    };
-                  }
-                  return category;
-                }),
-                updatedAt: Date.now()
-              };
+
+      const updatedData = {
+        ...data,
+        lists: data.lists.map(list =>
+          list._id === listId
+            ? {
+              ...list,
+              categories: list.categories.map(cat =>
+                cat._id === catId
+                  ? { ...cat, problems: [...cat.problems, newProblem] }
+                  : cat
+              )
             }
-            return list;
-          })
-        };
-        // Update localStorage here
-        localStorage.setItem("userData", JSON.stringify(newData));
-        return newData;
-      });
+            : list
+        )
+      };
+
+      setData(updatedData);
       setElevatedProblem(newProblem._id);
-      showNotification(`Problem number ${probNum} added successfully`)
+      localStorage.setItem("userData", JSON.stringify(updatedData));
+      showNotification(`Problem number ${probNum} added successfully`, 'success');
       return true;
     } catch (err) {
       console.error("Error adding problem:", err);
     }
   };
 
-  const updateNotes = async (listId,categoryId,problemId,updatedNotes) => {
+  /**
+   * Deletes a problem from a category.
+   * @param {string} listId - The list ID.
+   * @param {string} categoryId - The category ID.
+   * @param {string} problemId - The problem's unique ID in the user's list.
+   */
+  const deleteProblem = async (listId, categoryId, problemId) => {
+      await api.delete('/data/deleteProblem', {
+        data: { listId, categoryId, problemId },
+      });
+
+      const updatedData = {
+        ...data,
+        lists: data.lists.map(list =>
+          list._id === listId ? {
+            ...list,
+            categories: list.categories.map(cat =>
+              cat._id === categoryId ? {
+                ...cat,
+                problems: cat.problems.filter(p => p._id !== problemId)
+              } : cat
+            )
+          } : list
+        )
+      };
+
+      setData(updatedData);
+      localStorage.setItem("userData", JSON.stringify(updatedData));
+  };
+
+  /**
+   * Marks a problem as solved, submits notes, and handles revision scheduling.
+   * @param {string} listId
+   * @param {string} categoryId
+   * @param {string} problemId
+   * @param {string} note - The notes for the problem.
+   * @param {boolean} addToRevise - Whether to add to the revision queue.
+   */
+  const updateProblemStatus = async (listId, categoryId, problemId, note, addToRevise) => {
     try {
-      const response = await api.patch('/data/updateNotes', {
-        listId: listId,
-        catId: categoryId,
-        probId: problemId,
-        notes: updatedNotes,
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
-    }
-    catch (err) {
+      const response = await api.patch('/data/submit',
+        { listId, catId: categoryId, probId: problemId, notes: note, addToRevise },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+
+      const newPixels = response.data?.data;
+      setPixels(newPixels);
+      localStorage.setItem("Pixels", JSON.stringify(newPixels));
+
+      const updatedData = {
+        ...data,
+        lists: data.lists.map(list =>
+          list._id === listId ? {
+            ...list,
+            categories: list.categories.map(cat =>
+              cat._id === categoryId ? {
+                ...cat,
+                problems: cat.problems.map(p =>
+                  p._id === problemId ? {
+                    ...p,
+                    solved: true,
+                    notes: note,
+                    revised: addToRevise === false ? true : false,
+                    toRevise: addToRevise ? (new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)) : null
+                  } : p
+                )
+              } : cat
+            )
+          } : list
+        )
+      };
+
+      setData(updatedData);
+      localStorage.setItem("userData", JSON.stringify(updatedData));
+    } catch (err) {
       console.error("Error updating problem status:", err);
     }
   };
 
-  // Per-list persistence for openCategory and elevatedProblem
-  useEffect(() => {
-    if (currentList?._id) {
-      if (currentList.categories.find(category => category._id === openCategory))
-        setOpenCategory(openCategory);
-      else if (currentList.categories.find(category => category._id === localStorage.getItem(`openCategory_${currentList._id}`)))
-        setOpenCategory(localStorage.getItem(`openCategory_${currentList._id}`));
+  /**
+   * Marks a problem in the revision queue as revised.
+   * @param {string} listId 
+   * @param {string} titleCategory - The title of the category.
+   * @param {string} probId 
+   */
+  const updateProblemRevisedStatus = async (listId, titleCategory, probId) => {
+    try {
+      const response = await api.patch('/data/markRevised',
+        { listId, titleCategory, probId },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+
+      const newPixels = response.data?.data;
+      setPixels(newPixels);
+      localStorage.setItem("Pixels", JSON.stringify(newPixels));
+
+      const updatedData = {
+        ...data,
+        lists: data.lists.map(list =>
+          list._id === listId ? {
+            ...list,
+            categories: list.categories.map(category =>
+              category.title === titleCategory ? {
+                ...category,
+                problems: category.problems.map(problem =>
+                  problem._id === probId ? { ...problem, revised: true } : problem
+                )
+              } : category
+            )
+          } : list
+        )
+      };
+      setData(updatedData);
+      localStorage.setItem("userData", JSON.stringify(updatedData));
+    } catch (error) {
+      console.error("Error updating problem revised status:", error);
     }
-  }, [currentList?._id]);
+  };
 
-  // ===== CONTEXT VALUE OBJECT =====
-  // Contains all state variables and functions to be shared across components
+  //----------------------------------------------------------------------------
+  // CONTEXT VALUE
+  //----------------------------------------------------------------------------
+
+  // Bundle all state and functions into a single value object for the provider.
   const value = {
-    // Data State
-    data,                    // Main data structure with all lists/categories/problems
-    setData,                 // Function to update main data structure
-    onQueryChange,
-
-    // Current Selection State
-    currentList,             // Currently selected list object
-    setCurrentList,          // Function to change current list
-
-    // UI State
-    elevatedCategory,        // _id of visually elevated category
-    setElevatedCategory,     // Function to set elevated category
-    openCategory,            // Currently open/expanded category object
-    setOpenCategory,         // Function to open/close categories
-    elevatedProblem,         // ID of the currently elevated problem
-    setElevatedProblem,      // Function to set elevated problem
-    resetData,               // Function to reset all data and state
-    openNote,
-    setOpenNote,             // Function to toggle notes modal
-
-    // Statistics
-    totalSolved,             // Total number of solved problems
-    setTotalSolved,          // Function to update solved count
-    totalProblems,           // Total number of problems
-    setTotalProblems,        // Function to update total count
-    totalRevised,
-    setTotalRevised,
-    // CRUD Functions
-    deleteList,              // Delete a list by ID
-    deleteCategory,         // Delete a category from a list
-    deleteProblem,          // Delete a problem from a category
-    updateProblemStatus,     // Mark problem as solved
-    addCategory,             // Add new category to list
-    addProblem,              // Add new problem to category
-    addToList,               // Add recommended list to user lists
-    addEmptyList,            // Create new empty list
-    updateProblemRevisedStatus, // Update problem's revised status
-
-    // Recommended Lists
-    recomList,               // Array of admin-created recommended lists
-
-    // Note Modal
-    noteModalOpen,
-    setNoteModalOpen,
-    noteModalContent,
-    setNoteModalContent,
-    modalOpen,
-    setModalOpen,
-    onModalClose,
-    modalTitle,
-    setModalTitle,
-    inputText,
-    setInputText,
-    inputLabel,
-    setInputLabel,
-    inputId,
-    setInputId,
-    inputType,
-    setInputType,
-    inputPlaceHolder,
-    setInputPlaceHolder,
-    onChange,
-    modalExtra,
-    setModalExtra,
-    setFunc,
-    func,
+    // State
+    data,
+    setData,
+    currentList,
+    setCurrentList,
+    recomList,
     problems,
     setProblems,
-    updateNotes,
-    getTotalSolved,
+
+    // Statistics
+    totalSolved,
+    setTotalSolved,
+    totalProblems,
+    setTotalProblems,
+    totalRevised,
+    setTotalRevised,
     pixels,
-    setPixels
+    setPixels,
+
+    // Functions
+    resetData,
+    getTotalSolved,
+    deleteList,
+    deleteCategory,
+    deleteProblem,
+    updateProblemStatus,
+    updateProblemRevisedStatus,
+    addCategory,
+    addProblem,
+    addToList,
+    addEmptyList,
   };
+
+  //----------------------------------------------------------------------------
+  // RENDER
+  //----------------------------------------------------------------------------
 
   return (
     <ProblemContext.Provider value={value}>
@@ -741,10 +585,14 @@ export const ProblemProvider = ({ children }) => {
   );
 };
 
-// ===== CUSTOM HOOK =====
-// Custom hook for using the context
-// Returns all state variables and functions from ProblemContext
-// Throws error if used outside of ProblemProvider
+//==============================================================================
+// CUSTOM HOOK
+//==============================================================================
+
+/**
+ * Custom hook to easily consume the ProblemContext.
+ * Throws an error if used outside of a ProblemProvider.
+ */
 export const useProblemContext = () => {
   const context = useContext(ProblemContext);
   if (context === undefined) {

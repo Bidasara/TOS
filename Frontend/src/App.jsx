@@ -17,38 +17,49 @@ import BrowsePage from './pages/browse.jsx'
 import MilestonesPage from './pages/milestone.jsx'
 import ResetPassword from './pages/resetPassword.jsx'
 import GetEmail from './pages/getEmail.jsx'
+import { NoteModalProvider } from './contexts/NoteModalContext.jsx'
+import { ModalProvider } from './contexts/ModalContext.jsx'
+import { ScrollProvider } from './contexts/ScrollContext.jsx'
+import Homepage from './pages/HomePage.jsx'
 
 function App() {
   return (
     <div className='h-screen w-screen'>
-    <NotificationProvider>
-    <ThemeProvider>
-    <SpriteAnimationProvider>
-      <BreakAnimationProvider>
-      <Router>
-        <AuthProvider>
-          <ProblemProvider>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/user/:username" element={<Dashboard />} />
-              <Route path='/' element={<Home />} />
-              <Route path='/shop' element={<PricePage />} />
-              <Route path='/checkout' element={<CheckoutPage/>}/>
-              <Route path='/library' element={<BrowsePage/>}/>
-              <Route path='/milestones' element={<MilestonesPage/>}/>
-            </Route>
-            <Route path='/login' element={<Login />} />
-            <Route path='/getEmail' element={<GetEmail/>}/>
-            <Route path='/resetPass' element={<ResetPassword/>}/>
-            <Route path='/register' element={<Register />} />
-          </Routes>
-          </ProblemProvider>
-        </AuthProvider>
-      </Router>
-      </BreakAnimationProvider>
-    </SpriteAnimationProvider>
-    </ThemeProvider>
-    </NotificationProvider>
+      <NotificationProvider>
+        <ThemeProvider>
+          <SpriteAnimationProvider>
+            <BreakAnimationProvider>
+              <Router>
+                <ScrollProvider>
+                  <AuthProvider>
+                    <NoteModalProvider>
+                      <ModalProvider>
+                        <ProblemProvider>
+                          <Routes>
+                            <Route element={<Layout />}>
+                              <Route path="/user/:username" element={<Dashboard />} />
+                              <Route path='/' element={<Home />} />
+                              <Route path='/shop' element={<PricePage />} />
+                              <Route path='/checkout' element={<CheckoutPage />} />
+                              <Route path='/library' element={<BrowsePage />} />
+                              <Route path='/milestones' element={<MilestonesPage />} />
+                            </Route>
+                            <Route path='/home' element={<Homepage/>}/>
+                            <Route path='/login' element={<Login />} />
+                            <Route path='/getEmail' element={<GetEmail />} />
+                            <Route path='/resetPass' element={<ResetPassword />} />
+                            <Route path='/register' element={<Register />} />
+                          </Routes>
+                        </ProblemProvider>
+                      </ModalProvider>
+                    </NoteModalProvider>
+                  </AuthProvider>
+                </ScrollProvider>
+              </Router>
+            </BreakAnimationProvider>
+          </SpriteAnimationProvider>
+        </ThemeProvider>
+      </NotificationProvider>
     </div>
   )
 }

@@ -10,7 +10,7 @@ const animationSchema = mongoose.Schema({
         type: Number,
         required: true
     }, 
-    pack: {
+    pack: { 
         idle: {
             sprite: {
                 type: String,
@@ -55,6 +55,9 @@ const animationSchema = mongoose.Schema({
             fps: {
                 type: Number,
                 required: true
+            },
+            delay: {
+                type: Number
             }
         },
         break: {

@@ -2,32 +2,40 @@ import { useState, useEffect } from 'react'; // 1. Import useEffect
 import { useProblemContext } from '../contexts/ProblemContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import Modal from './common/Modal';
-import Input from './common/Input';
+import { useModal } from '../contexts/ModalContext';
+import { useNotification } from '../contexts/NotificationContext';
 
-const Options = (props) => {
-    const { accessToken } = useAuth();
-    const { setCurrentList, data,getTotalSolved,addEmptyList } = useProblemContext();
-    const { totalProblems, totalSolved, totalRevised } = useProblemContext();
+const Options = () => {
+    //1. Value from contexts
+    const { setCurrentList, data, getTotalSolved, totalProblems, totalSolved, totalRevised } = useProblemContext();
     const { theme } = useTheme();
-
-    const [tabOpen, setTabOpen] = useState(false);
-    const [inputVal, setInputVal] = useState("");
+    const { setModalOpen, setFunc, setQuery, setModalTitle, setModalExtra, setInputLabel, setInputId, setInputPlaceHolder, query } = useModal();
+    const { accessToken } = useAuth();
+    const { showNotification } = useNotification();
 
     // 2. Add state to manage the visibility of the stats
     const [isStatsVisible, setIsStatsVisible] = useState(true);
 
-    const handleAddList = async (title) =>{
-        console.log('title',title)
-        if(!accessToken)
-            console.log("need to be registered for that");
-        else{
-            addEmptyList(title);
+    const handleAddList = async () => {
+        if (!accessToken) {
+            showNotification("need to be registered for that", "error");
+            return;
         }
-    }   
-    useEffect(()=>{
+        else {
+            setModalOpen(true)
+            setFunc("list")
+            setQuery("")
+            setModalTitle("Add New List")
+            setModalExtra(query)
+
+            setInputLabel("List Title")
+            setInputId("list-title")
+            setInputPlaceHolder("the name of your list")
+        }
+    }
+    useEffect(() => {
         getTotalSolved();
-    },[])
+    }, [])
 
     // 3. Add an effect to automatically hide the stats after a delay
     useEffect(() => {
@@ -73,11 +81,11 @@ const Options = (props) => {
                     );
                 })}
             </div>
-            
+
             {/* Create Custom List Button (No Changes) */}
             <div className='h-1/12'>
                 <button
-                    onClick={() => setTabOpen(true)}
+                    onClick={handleAddList}
                     className={`w-full py-2.5 rounded-lg font-medium transition-all shadow-md
                     ${theme === 'cyberpunk' ? 'bg-pink-500 text-cyan-400 neon-text border-2 border-cyan-400 hover:bg-pink-700' : 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 dark:from-indigo-700 dark:to-indigo-600 dark:hover:from-indigo-600 dark:hover:to-indigo-500'}`}
                 >
@@ -87,7 +95,7 @@ const Options = (props) => {
 
             {/* 4. UPDATED QuickStats Section */}
             <div className="h-3/12 relative"> {/* Added 'relative' for positioning the button */}
-                
+
                 {/* This is the "Show" button overlay. It only appears when stats are hidden. */}
                 {!isStatsVisible && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -103,56 +111,27 @@ const Options = (props) => {
                     </div>
                 )}
 
-                {/* This is the original stats content. It gets blurred when hidden. */}
                 <div
                     className={`h-full px-3 flex flex-col justify-around gap-1 rounded-lg shadow transition-all duration-500 
-                    ${isStatsVisible ? '' : 'blur-md'}
-                    ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border border-cyan-400' : 'bg-gray-100 dark:bg-gray-700'}`}
+    ${isStatsVisible ? '' : 'blur-md'}
+    ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border border-cyan-400' : 'bg-gray-100 dark:bg-gray-700'}`}
                 >
                     <h3 className={`text-sm font-semibold ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-gray-700 dark:text-gray-300'}`}>Quick Stats</h3>
                     <div className="flex items-center justify-between gap-3 h-8/12">
-                        <div className={`h-10/12 flex flex-col justify-between rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] flex-grow w-full ${theme === 'tos' ? 'bg-tos-bg border border-tos-accent' : theme === 'cyberpunk' ? 'bg-black border border-pink-500 neon-text' : 'bg-indigo-50 dark:bg-indigo-900/30'}`}>
-                            <div className={`text-xs p-1 ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-indigo-600 dark:text-indigo-400'}`}>Problems Solved</div>
-                            <div className={`text-2xl p-1 font-bold ${theme === 'tos' ? 'tos-accent' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-indigo-700 dark:text-indigo-300'}`}>{totalSolved}/{totalProblems}</div>
+                        {/* Simplified Stat Box - Problems Solved */}
+                        <div className={`h-10/12 flex flex-col justify-between rounded-lg shadow-sm transition-transform hover:scale-[1.02] flex-grow p-2 ${theme === 'tos' ? 'bg-tos-bg border border-tos-accent' : theme === 'cyberpunk' ? 'bg-black border border-pink-500 neon-text' : 'bg-indigo-50 dark:bg-indigo-900/30'}`}>
+                            <div className={`text-xs ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-indigo-600 dark:text-indigo-400'}`}>Problems Solved</div>
+                            <div className={`text-xl font-bold ${theme === 'tos' ? 'tos-accent' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-indigo-700 dark:text-indigo-300'}`}>{totalSolved}/{totalProblems}</div>
                         </div>
-                        <div className={`h-10/12 flex flex-col justify-between rounded-lg shadow-sm transition-transform hover:transform hover:scale-[1.02] flex-grow w-full ${theme === 'tos' ? 'bg-tos-bg border border-tos-accent' : theme === 'cyberpunk' ? 'bg-black border border-cyan-400 neon-text' : 'bg-green-50 dark:bg-green-900/30'}`}>
-                            <div className={`text-xs p-1 ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-green-600 dark:text-green-400'}`}>Problems Revised</div>
-                            <div className={`text-2xl p-1 font-bold ${theme === 'tos' ? 'tos-accent' : theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-green-700 dark:text-green-300'}`}>{totalRevised}/{totalSolved}</div>
+
+                        {/* Simplified Stat Box - Problems Revised */}
+                        <div className={`h-10/12 flex flex-col justify-between rounded-lg shadow-sm transition-transform hover:scale-[1.02] flex-grow p-2 ${theme === 'tos' ? 'bg-tos-bg border border-tos-accent' : theme === 'cyberpunk' ? 'bg-black border border-cyan-400 neon-text' : 'bg-green-50 dark:bg-green-900/30'}`}>
+                            <div className={`text-xs ${theme === 'tos' ? 'tos-light' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-green-600 dark:text-green-400'}`}>Problems Revised</div>
+                            <div className={`text-xl font-bold ${theme === 'tos' ? 'tos-accent' : theme === 'cyberpunk' ? 'text-pink-400 neon-text' : 'text-green-700 dark:text-green-300'}`}>{totalRevised}/{totalSolved}</div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            {/* Modal Section (No Changes) */}
-            {tabOpen && (
-                <Modal
-                    isOpen={tabOpen}
-                    onClose={() => setTabOpen(false)}
-                    onSubmit={() => {
-                        handleAddList(inputVal);
-                        setInputVal("");
-                        setTabOpen(false);
-                    }}
-                    title="Add New List"
-                >
-                    <Input
-                        label="List Title"
-                        id="list-title"
-                        value={inputVal}
-                        onChange={(e) => { setInputVal(e.target.value) }}
-                        placeholder="Enter list title"
-                        autoFocus={true}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                console.log(12312)
-                                handleAddList(inputVal);
-                                setInputVal("");
-                                setTabOpen(false);
-                            }
-                        }}
-                    />
-                </Modal>
-            )}
         </div>
     )
 }

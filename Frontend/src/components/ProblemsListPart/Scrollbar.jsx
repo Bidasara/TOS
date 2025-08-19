@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useProblemContext } from '../../contexts/ProblemContext'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useScroll } from '../../contexts/ScrollContext'
 
 const Scrollbar = () => {
     //Hooks
-    const {data, currentList, setCurrentList,setElevatedCategory,setOpenCategory, deleteList} = useProblemContext()
+    const {data, currentList, setCurrentList, deleteList} = useProblemContext()
+    const {setElevatedCategory,setOpenCategory} = useScroll();
     const [center, setCenter] = useState(0)
     const { theme } = useTheme()
 

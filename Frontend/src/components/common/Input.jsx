@@ -23,6 +23,7 @@ const Input = ({
         <input
           type={type}
           id={id}
+          autoComplete='off'
           className={`
             pl-3 block w-full py-2.5 pr-3 border border-gray-300 dark:border-gray-700 
             rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white
@@ -32,7 +33,7 @@ const Input = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          onKeyDown={()=>onKeyDown(extra)}
+          onKeyDown={onKeyDown}
           autoFocus={autoFocus}
         />
       </div>

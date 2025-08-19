@@ -150,28 +150,23 @@ export const addProblemForCategory = asyncHandler(async (req, res) => {
 export const deleteProblem = asyncHandler( async (req,res)=> {
     const userId = req.user.id;
     if(!userId) throw new ApiError(400, 'User not logged in');
+    const user = User.findById(userId)
+    if(!user) throw new ApiError(404, 'User not found');
     const {listId, categoryId, problemId} = req.body;
-    ('2',listId);
     if(!listId) throw new ApiError(400, 'Invalid List');
     if(!categoryId) throw new ApiError(400, 'Invalid Category');
     if(!problemId) throw new ApiError(400, 'Invalid Problem id');
-    ('3');
 
     const list = await List.findById(listId);
-    ('4');
     if(!list) throw new ApiError(404, 'List not found');
     if(!list.byAdmin && list.owner != userId) throw new ApiError(404, 'Unauthorized to delete problem');
 
     const category = list.categories.id(categoryId);
-    ('5');
     if(!category) throw new ApiError(404, 'Category not found');
 
     category.problems = category.problems.filter(prob=> prob._id != problemId)
-    ('6');
 
-    ('7');
     await list.save();
-    ('8');
     return res.status(200).json(new ApiResponse(200, 'Problem deleted successfully'));
 })
 
@@ -374,14 +369,9 @@ const addRecomListForUserId = asyncHandler(async (req, res) => {
 });
 
 const getAllProblems = asyncHandler(async (req,res)=> {
-    const problems = await Problem.find();
-    if(!problems)
-        throw new ApiError(404,"No problems found");
-
     const totsProbs = await Problem.find();
     if(!totsProbs)
         throw new ApiError(404,'no probs');
-    ("totalProblems:",totsProbs.length);
     return res.status(200).json(new ApiResponse(200,{problems:totsProbs,totalProblems:totsProbs.length},'Successfully sent all problems'));
 })
 
@@ -414,7 +404,6 @@ const getSolvedAndRevised = asyncHandler(async (req,res)=>{
     const user = await User.findById(userId)
     if(!user) throw new ApiError('User not found');
     const data  = await DoneProblem.findById(user.doneProblemId);
-    (112);
     return res.status(200).json(new ApiResponse(200,{solved:data.solvedProblems.length,revised:data.revisedProblems.length}))
 })
 

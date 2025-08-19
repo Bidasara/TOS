@@ -1,27 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useProblemContext } from '../../contexts/ProblemContext';
 import Input from './Input';
+import { useModal } from '../../contexts/ModalContext';
 
-const Modal = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  title,
-  size = "md",
-  extra,
-  children
-}) => {
+const Modal = ({size="md"}) => {
   const modalRef = useRef();
-  const {
-    inputLabel, inputId, inputPlaceHolder, onChange, modalExtra, addCategory, func, addProblem,onQueryChange
-  } = useProblemContext();
+  const {inputLabel, inputId, inputPlaceHolder, modalExtra, func,query,setQuery,suggestions,setSuggestions,showSuggestions,setShowSuggestions,setModalOpen,modalOpen,modalTitle,setModalExtra} = useModal();
+  const { addProblem,addCategory,problems,addEmptyList } = useProblemContext();
+
   let currFunc = addCategory;
   if (func === 'problem')
     currFunc = addProblem;
-  const { problems } = useProblemContext();
-  const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  else if (func === 'list')
+    currFunc = addEmptyList;
+  
   useEffect(() => {
     if (func!=='problem'){
       setSuggestions([]);
@@ -37,40 +29,46 @@ const Modal = ({
         p => p.title.toLowerCase().includes(query?.toLowerCase()) || String(p.num).includes(query)
       ).slice(0, 5)
     )
-    onQueryChange(query);
+    setQuery(query);
   }, [query, problems, showSuggestions]);
 
   // Handle ESC key press
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape'){
+        setModalOpen(false);
+        setQuery("")
+        setShowSuggestions(false);
+      } 
     };
 
-    if (isOpen) {
+    if (modalOpen) {
       document.addEventListener('keydown', handleEsc);
       return () => {
         document.removeEventListener('keydown', handleEsc);
       };
     }
-  }, [isOpen, onClose]);
+  }, [modalOpen]);
 
   // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
+        setModalOpen(false);
+        setQuery("")
+        setShowSuggestions(false);
       }
     };
 
-    if (isOpen) {
+    if (modalOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [isOpen, onClose]);
+  }, [modalOpen]);
 
-  if (!isOpen) return null;
+  if (!modalOpen) return null;
 
   const sizeClasses = {
     sm: "max-w-md",
@@ -86,11 +84,11 @@ const Modal = ({
         className={`${sizeClasses[size]} w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl transform transition-all animate-fadeIn`}
       >
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{modalTitle}</h3>
         </div>
 
         <div className="p-6">
-          {children?(children):(<Input
+          <Input
             label={inputLabel}
             id={inputId}
             type="text"
@@ -99,11 +97,19 @@ const Modal = ({
             onChange={(e) => {
               setShowSuggestions(true);
               setQuery(e.target.value);
-              onChange(e);
+            }} 
+            onKeyDown = {(e) => {
+              if (e.key === 'Enter') {
+                console.log("1");
+                currFunc(e.target.value,modalExtra)
+                setQuery("")
+                setModalOpen(false)
+                setModalExtra(null);
+                setShowSuggestions(false);
+              }
             }}
-            onKeyDown={(e) => { if (e.key === 'Enter') currFunc }}
             extra={modalExtra}
-          />)}
+          />
           {showSuggestions && (
             <ul className='absolute bg-white border rounded shadow z-50'>
               {suggestions.map(s => (
@@ -129,7 +135,10 @@ const Modal = ({
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm 
                      hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors
                      dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-            onClick={onClose}
+            onClick={()=>{
+              setModalOpen(false);
+              setQuery("");
+            }}
           >
             Cancel
           </button>
@@ -139,7 +148,12 @@ const Modal = ({
                      hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors
                      active:bg-indigo-800 active:transform active:scale-95
                      dark:bg-indigo-700 dark:hover:bg-indigo-600"
-            onClick={() => onSubmit(extra)}
+            onClick={() => {
+              currFunc(query,modalExtra)
+              setQuery("")
+              setModalExtra(null);
+              setModalOpen(false)
+            }}
           >
             Add
           </button>

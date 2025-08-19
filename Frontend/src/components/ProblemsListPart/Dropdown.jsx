@@ -1,12 +1,11 @@
 import { useProblemContext } from '../../contexts/ProblemContext.jsx';
+import { useScroll } from '../../contexts/ScrollContext.jsx';
 import Scroll from '../common/Scroll.jsx';
 import Category from './Category.jsx';
 
 const Dropdown = () => {
-    const { 
-        currentList, data,setModalOpen,setFunc,setModalTitle,
-        setInputText,setInputLabel,setInputId,setInputType,setInputPlaceHolder,setModalExtra,openCategory,setOpenCategory
-    } = useProblemContext();
+    const { currentList, data } = useProblemContext();
+    const {openCategory,setOpenCategory} = useScroll();
 
     return (
         <>

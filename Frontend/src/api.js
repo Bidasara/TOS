@@ -1,17 +1,30 @@
+// api.js
 import axios from "axios";
-import { getAccessToken, setAccessToken,triggerLogout } from "./authToken";
+
+// This is where we'll store the token, but it will be managed externally
+let accessToken = null;
+
+// Function to set the token from outside
+export const setApiAccessToken = (token) => {
+  accessToken = token;
+};
+
+// Function to clear the token from outside
+export const clearApiAccessToken = () => {
+  accessToken = null;
+};
 
 const api = axios.create({
   baseURL: "/api/v1",
   withCredentials: true,
 });
+console.log("api.js re-rendered")
 
 // Request interceptor: attach access token
 api.interceptors.request.use(
   (config) => {
-    const token = getAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -23,26 +36,29 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (
-      (error.response?.status === 401 || error.response?.status === 403) &&
-      !originalRequest._retry
-    ) {
+    // Check for 401 and make sure it's not a retry
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        // Attempt to refresh token
+        // Attempt to refresh token using a separate axios instance to avoid a recursive loop
         const res = await axios.post("/api/v1/auth/refresh-token", {}, { withCredentials: true });
-        setAccessToken(res.data.data.accessToken);
-        originalRequest.headers.Authorization = `Bearer ${res.data.data.accessToken}`;
-        return api(originalRequest); // Retry original request
+        
+        // Update the token in our external variable
+        const newAccessToken = res.data.data.accessToken;
+        setApiAccessToken(newAccessToken);
+        
+        // Update the token in the original request headers
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        
+        // Dispatch an event to notify the AuthContext that the token has been refreshed
+        window.dispatchEvent(new CustomEvent('token-refreshed', { detail: { token: newAccessToken } }));
+        
+        // Retry the original request with the new token
+        return api(originalRequest);
       } catch (refreshError) {
-        const refreshErrorStatus = refreshError.response?.status;
-        console.log(refreshError)
-        if( refreshErrorStatus === 401 || refreshErrorStatus === 403) {
-          console.error("Refresh token failed, logging out user...");
-          triggerLogout();
-        } else {
-          console.error("Error refreshing token:", refreshError);
-        }
+        console.error("Refresh token failed, logging out user...");
+        // Dispatch an event to trigger logout
+        window.dispatchEvent(new Event('trigger-logout'));
         return Promise.reject(refreshError);
       }
     }
@@ -50,4 +66,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api; 
+export default api;

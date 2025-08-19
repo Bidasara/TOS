@@ -13,9 +13,9 @@ export const insertQuestions = async () => {
         }
       }))
       const result = await Problem.bulkWrite(operations);
-      ("✅ Problem sync complete!");
-    (`${result.upsertedCount} problems inserted.`);
-    (`${result.modifiedCount} problems updated.`); 
+      console.log("✅ Problem sync complete!");
+    console.log(`${result.upsertedCount} problems inserted.`);
+    console.log(`${result.modifiedCount} problems updated.`); 
     } catch (error) {
       console.error("Error inserting/updating animations:", error);
     }
@@ -23,7 +23,7 @@ export const insertQuestions = async () => {
 
 export const insertAnimations = async () => {
   try {
-      const operations = animationPacks.map(animation=>({
+    const operations = animationPacks.map(animation=>({
         updateOne: {
           filter: {title: animation.title},
           update: {$set: animation},
@@ -31,9 +31,9 @@ export const insertAnimations = async () => {
         }
       }))
       const result = await Animation.bulkWrite(operations);
-      ("✅ Animation sync complete!");
-    (`${result.upsertedCount} animations inserted.`);
-    (`${result.modifiedCount} animations updated.`); 
+      console.log("✅ Animation sync complete!");
+    console.log(`${result.upsertedCount} animations inserted.`);
+    console.log(`${result.modifiedCount} animations updated.`); 
     } catch (error) {
       console.error("Error inserting/updating animations:", error);
     }

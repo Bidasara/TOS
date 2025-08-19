@@ -179,18 +179,13 @@ const refreshToken = asyncHandler(async (req, res) => {
 
     const tokens = generateTokens(user);
     if (!tokens)
-        throw new ApiError(500, 'Error generating tokens');
-
-    res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Strict",
-        maxAge: 5 * 24 * 60 * 60 * 1000 // 7 days
-    });
+        throw new ApiError(500, 'Error generating tokens'); 
 
     return res.status(200).json(new ApiResponse(200, {
         accessToken: tokens.accessToken,
         accessTokenExpiry: tokens.accessTokenExpiresIn,
+        username: user.username,
+        avatar: user.avatar
     }, 'Tokens refreshed successfully'));
 })
 

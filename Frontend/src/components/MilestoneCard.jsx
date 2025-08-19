@@ -15,26 +15,9 @@ const getStatusIcon = (status) => {
     }
 };
 
-const MilestoneCard = ({ title, description, rewardText, status }) => {
+const MilestoneCard = ({ title, description, rewardText, status,onClaim }) => {
     
     const {showNotification}= useNotification();
-    const handleClaim = async (milestoneId) =>{
-        try {
-            const response = await api.patch(`/user/markMilestoneDone/${milestoneId}`)
-            // console.log(response)
-            let data = localStorage.getItem('milestonsDone');
-            if(!data)
-                data = '[]';
-            let parsedData = JSON.parse(data);
-            if(!parsedData.includes(milestoneId))
-            parsedData.push(milestoneId);
-            localStorage.setItem('milestonesDone',JSON.stringify(parsedData));
-            
-        } catch(error) {
-            console.error(error)
-            showNotification('Already Done or Can\'t Claim at the moment')
-        }
-    }
     let rewardT = "Get ";
 
     if (rewardText.rewardPixels > 0)
@@ -58,7 +41,7 @@ const MilestoneCard = ({ title, description, rewardText, status }) => {
             {!status?(
                 <div className='bg-gray-600 p-3 px-4 text-xl rounded-2xl text-pretty text-shadow-lg'>Claimed</div>
             ):(
-            <button onClick={()=>handleClaim(rewardText._id)} className='bg-yellow-500 p-3 px-4 text-xl hover:font-bold hover:p-4 rounded-2xl text-pretty text-shadow-lg'>Claim</button>
+            <button onClick={()=>onClaim(rewardText._id)} className='bg-yellow-500 p-3 px-4 text-xl hover:font-bold hover:p-4 rounded-2xl text-pretty text-shadow-lg'>Claim</button>
             )}
         </div>
     );

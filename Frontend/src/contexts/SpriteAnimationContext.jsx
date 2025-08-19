@@ -1,13 +1,14 @@
-import { useContext,createContext,useEffect,useState } from "react";
+import { useContext, createContext, useEffect, useState } from "react";
 
 const SpriteAnimationContext = createContext();
 
-export const SpriteAnimationProvider = ({children}) =>{
+export const SpriteAnimationProvider = ({ children }) => {
     const [currentAnimation, setCurrentAnimation] = useState('idle')
     const [loop, setLoop] = useState(true);
-const [currCharacter, setCurrCharacter] = useState(() => {
-    return localStorage.getItem('currCharacter') || '';
-});
+    const [currCharacter, setCurrCharacter] = useState(() => {
+        return localStorage.getItem('currCharacter') || '';
+    });
+    const [userAnimations,setUserAnimations] = useState([]);
     const triggerAttack = () => {
         setCurrentAnimation('attack');
         setLoop(false);
@@ -21,8 +22,8 @@ const [currCharacter, setCurrCharacter] = useState(() => {
     }
 
     return (
-        <SpriteAnimationContext.Provider value={{ currentAnimation,setCurrentAnimation,loop,setLoop,triggerAttack,currCharacter,setCurrCharacter,backToIdle}}>
-        {children}
+        <SpriteAnimationContext.Provider value={{ currentAnimation, setCurrentAnimation, loop, setLoop, triggerAttack, currCharacter, setCurrCharacter, backToIdle, userAnimations,setUserAnimations }}>
+            {children}
         </SpriteAnimationContext.Provider>
     );
 };

@@ -3,9 +3,13 @@ import { useProblemContext } from '../../contexts/ProblemContext'
 import { useTheme } from '../../contexts/ThemeContext';
 import Scroll from '../common/Scroll.jsx';
 import Problem from './Problem.jsx'
+import { useScroll } from '../../contexts/ScrollContext.jsx';
+import { useModal } from '../../contexts/ModalContext.jsx';
 
 const Category = ({ handleClick, item: category, elevate: elevatedCategory, open: openCategory }) => {
-    const { currentList, deleteCategory, data,addProblem,setFunc,setModalTitle,setModalExtra,setModalOpen,setInputId,setInputLabel,setInputPlaceHolder,setInputType, elevatedProblem, setElevatedProblem } = useProblemContext();
+    const { currentList, deleteCategory, data } = useProblemContext();
+    const {setFunc,setModalTitle,setModalExtra,setModalOpen,setInputId,setInputLabel,setInputPlaceHolder,setInputType } = useModal();
+    const {elevatedProblem, setElevatedProblem} = useScroll();
     const handleAdd = () =>{
         setModalTitle("Add Problem");
         setFunc("problem");
