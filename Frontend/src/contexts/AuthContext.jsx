@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
       setUsername(null);
       setAvatarLink(null);
       localStorage.clear();
-      if(!window.location.hash.includes('/login') && !window.location.hash.includes('/register') && !window.location.hash.includes('/resetPass') && !window.location.hash.includes('/getEmail'))
+      if(!window.location.hash.includes('/login') && !window.location.hash.includes('/register') && !window.location.hash.includes('/resetPass') && !window.location.hash.includes('/getEmail') && !window.location.hash.includes('/user/'))
       navigate('/login');
     }
   }, [navigate]);
@@ -99,6 +99,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (formData) => {
     try {
       const response = await api.post("/auth/login", formData);
+      console.log(response.data)
 
       const { accessToken, user } = response.data.data;
       setAccessToken(accessToken);
@@ -109,6 +110,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("avatarLink", user.avatar);
       navigate("/");
     } catch (error) {
+      console.log("Login failed:", error);
       setError(error.response?.data?.message || "Login failed. Please try again.");
     }
   };

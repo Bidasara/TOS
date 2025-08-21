@@ -8,6 +8,7 @@ import { Animation } from '../models/animation.model.js';
 import { Purchase } from '../models/purchase.model.js';
 import { DoneProblem } from '../models/doneProblems.model.js';
 import { Problem } from '../models/problem.model.js';
+import mongoose from 'mongoose';
 
 const getUserDashboard = asyncHandler(async (req, res) => {
   const username = req.params.username || req.user.username;
@@ -15,43 +16,89 @@ const getUserDashboard = asyncHandler(async (req, res) => {
   if (!user) throw new ApiError(404, 'User not found');
 
   try {
-    const stats = (await DoneProblem.find({user:user._id}))[0];
-    const solvedStats = await Problem.aggregate([  
+    const statsPipeline = await DoneProblem.aggregate([
       {
-        $match:{
-          _id: {$in:stats.solvedProblems}
+        $match: {
+          user: new mongoose.Types.ObjectId(user._id)
         }
       },
       {
-        $group:{
-          _id: '$difficulty',
-          count: {$sum: 1}
+        $unwind: '$problems'
+      },
+      {
+        $lookup: {
+          from: 'problems', // The actual collection name for 'Problem' model
+          localField: 'problems.problemId',
+          foreignField: '_id',
+          as: 'problemDetails'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            status: '$problems.status',
+            difficulty: { $arrayElemAt: ['$problemDetails.difficulty', 0] }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.status',
+          stats: {
+            $push: {
+              difficulty: '$_id.difficulty',
+              count: '$count'
+            }
+          }
         }
       }
     ]);
-    const revisedStats = await Problem.aggregate([
-      {
-        $match:{
-          _id: {$in:stats.revisedProblems}
-        }
-      },
-      {
-        $group:{ 
-          _id: '$difficulty',
-          count: {$sum: 1}
-        }
-      }
-    ])
-    const userObject = user.toObject();
 
-    delete userObject._id;
-    delete userObject.createdAt;
-    delete userObject.updatedAt;
-    return res.status(200).json(new ApiResponse(200, { user:userObject, solvedStats,revisedStats }, 'User dashboard retrieved successfully'));
+    const doneProblems = await DoneProblem.findOne({ user: user._id })
+      .populate({
+        path: 'problems.problemId',
+        select: 'num title difficulty link'
+      })
+      .lean();
+
+    const revisingProblems = doneProblems?.problems
+      .filter(p => p.status === 'revising' || p.status === 'solved')
+      .map(p => ({
+        ...p.problemId,
+        nextRevisionDate: p.nextRevisionDate
+      })) || [];
+
+    const stats = {
+      solvedStats: [],
+      revisedStats: [],
+      masteredStats: []
+    };
+
+    statsPipeline.forEach(group => {
+      if (group._id === 'solved') {
+        stats.solvedStats.push(...group.stats);
+      } else if (group._id === 'revising') {
+        stats.revisedStats.push(...group.stats);
+      } else if (group._id === 'mastered') {
+        stats.masteredStats.push(...group.stats);
+      }
+    });
+
+    const easyProblems = await Problem.countDocuments({ difficulty: 'Easy' });
+    const mediumProblems = await Problem.countDocuments({ difficulty: 'Medium' });
+    const hardProblems = await Problem.countDocuments({ difficulty: 'Hard' }); 
+
+    const userObject = {
+      username: user.username,
+      avatar: user.avatar,
+      pixels: user.pixels
+    };
+    return res.status(200).json(new ApiResponse(200, { user: userObject, solvedStats: stats.solvedStats, revisedStats: stats.revisedStats, masteredStats: stats.masteredStats, easyProblems, mediumProblems, hardProblems,revisingProblems }, 'User dashboard retrieved successfully'));
   } catch (error) {
     console.error(error);
     throw new ApiError(500, 'Dashboard aggregation failed');
-  }   
+  }
 });
 
 const getCart = asyncHandler(async (req, res) => {
@@ -307,56 +354,57 @@ const getAttemptedRevisedStats = asyncHandler(async (req, res) => {
   res.json({ success: true, data: result });
 });
 
-const addPixels = asyncHandler(async(req,res)=>{
+const addPixels = asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  if(!userId)
-    throw new ApiError(404,"No user id provided")
+  if (!userId)
+    throw new ApiError(404, "No user id provided")
   const user = await User.findById(userId);
-  if(!user)
-    throw new ApiError(404,"User not found")
+  if (!user)
+    throw new ApiError(404, "User not found")
   const ownedpixels = user.pixels;
   user.pixels += req.body.amount;
   await user.save();
-  return res.status(200).json(new ApiResponse(200,`${req.body.amount} Pixels added successfully`));
+  return res.status(200).json(new ApiResponse(200, `${req.body.amount} Pixels added successfully`));
 })
-const removePixels = asyncHandler(async(req,res)=>{
+const removePixels = asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  if(!userId)
-    throw new ApiError(404,"No user id provided")
+  if (!userId)
+    throw new ApiError(404, "No user id provided")
   const user = await User.findById(userId);
-  if(!user)
-    throw new ApiError(404,"User not found")
+  if (!user)
+    throw new ApiError(404, "User not found")
   const ownedpixels = user.pixels;
   user.pixels -= req.body.amount;
   await user.save();
-  return res.status(200).json(new ApiResponse(200,`${req.body.amount} Pixels removed successfully`));
+  return res.status(200).json(new ApiResponse(200, `${req.body.amount} Pixels removed successfully`));
 })
-const markMilestoneDone = asyncHandler(async(req,res)=>{
+const markMilestoneDone = asyncHandler(async (req, res) => {
   const userId = req.user.id;
-  if(!userId)
-    throw new ApiError(404,"No user id provided")
+  if (!userId)
+    throw new ApiError(404, "No user id provided")
   const user = await User.findById(userId);
-  if(!user)
-    throw new ApiError(404,"User not found")
+  if (!user)
+    throw new ApiError(404, "User not found")
   const milestoneId = req.params.id;
-  if(!milestoneId)
-    throw new ApiError(404,"No milestone provided")
+  if (!milestoneId)
+    throw new ApiError(404, "No milestone provided")
   const milestone = await Milestone.findById(milestoneId);
-  if(!milestone)
-    throw new ApiError(404,"No milestone found");
-  if(user.milestones.includes(milestoneId))
-    return res.status(200).json(new ApiResponse(200,'Milestone already redeemed'));
+  if (!milestone)
+    throw new ApiError(404, "No milestone found");
+  if (user.milestones.includes(milestoneId))
+    return res.status(200).json(new ApiResponse(200, 'Milestone already redeemed'));
   user.milestones.push(milestoneId);
-  const dataset = await DoneProblem.find({user:user._id});
+  const dataset = await DoneProblem.find({ user: user._id });
   const data = dataset[0];
-  let diff = milestone.questionsToRevise - data.revisedProblems.length
-  if(diff > 0){
-    return res.status(300).json(new ApiResponse(300,`Just ${diff} more questions to revise 🦾😊🦾`))
+  const revisedProblems = data.problems.filter(prob => prob.status === 'revising' || prob.status === 'mastered');
+  let diff = milestone.questionsToRevise - revisedProblems.length;
+  if (diff > 0) {
+    return res.status(300).json(new ApiResponse(300, `Just ${diff} more questions to revise 🦾😊🦾`))
   }
-  if(milestone.rewardPixels>0){
+  if (milestone.rewardPixels > 0) {
     user.pixels += milestone.rewardPixels;
   }
-  if(milestone.rewardAnimation){
+  if (milestone.rewardAnimation) {
     const newPurchase = new Purchase({
       user: userId,
       animation: milestone.rewardAnimation,
@@ -364,24 +412,24 @@ const markMilestoneDone = asyncHandler(async(req,res)=>{
     })
     await newPurchase.save();
   }
-  if(milestone.rewardTrophy){
+  if (milestone.rewardTrophy) {
     user.trophies.push(milestone.rewardTrophy);
   }
   await user.save();
-  return res.status(200).json(new ApiResponse(200,'Marked Milestone done'));
+  return res.status(200).json(new ApiResponse(200, 'Marked Milestone done'));
 })
-const getAllMilestones = asyncHandler(async(req,res)=>{
+const getAllMilestones = asyncHandler(async (req, res) => {
   const milestones = await Milestone.find();
   (milestones)
-  return res.status(200).json(new ApiResponse(200,milestones,'Successfully sent all milestones'));
+  return res.status(200).json(new ApiResponse(200, milestones, 'Successfully sent all milestones'));
 })
 
-const getAllMilestonesDone = asyncHandler(async(req,res)=>{
+const getAllMilestonesDone = asyncHandler(async (req, res) => {
   const userId = await req.user.id;
-  if(!userId) throw new ApiError(400,'user not logged in');
+  if (!userId) throw new ApiError(400, 'user not logged in');
   const user = await User.findById(userId);
-  if(!user) throw new ApiError(404,"User not found");
-  return res.status(200).json(new ApiResponse(200,{milestones:user.milestones,pixels:user.pixels},'Successfully sent all done milestones'));
+  if (!user) throw new ApiError(404, "User not found");
+  return res.status(200).json(new ApiResponse(200, { milestones: user.milestones, pixels: user.pixels }, 'Successfully sent all done milestones'));
 })
 
 export default {

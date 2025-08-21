@@ -23,45 +23,82 @@ import { ScrollProvider } from './contexts/ScrollContext.jsx'
 import Homepage from './pages/HomePage.jsx'
 
 function App() {
-  return (
-    <div className='h-screen w-screen'>
-      <NotificationProvider>
-        <ThemeProvider>
+ return (
+  <NotificationProvider>
+   <Router>
+    <Routes>
+     <Route path='/' element={<Homepage />} />
+     <Route path="/user/:username" element={
+      <ThemeProvider>
+       <SpriteAnimationProvider>
+        <BreakAnimationProvider>
+         <ScrollProvider>
+          <AuthProvider>
+           <NoteModalProvider>
+            <ModalProvider>
+             <ProblemProvider>
+              <Dashboard />
+             </ProblemProvider>
+            </ModalProvider>
+           </NoteModalProvider>
+          </AuthProvider>
+         </ScrollProvider>
+        </BreakAnimationProvider>
+       </SpriteAnimationProvider>
+      </ThemeProvider>
+     } />
+     <Route path="/*" element={
+      <div className="min-h-screen w-full grid place-items-center bg-zinc-900 p-4">
+       <div
+        className="relative overflow-hidden rounded-lg shadow-2xl bg-white"
+        style={{
+         width: 'min(95vw, calc(95vh * 16/9))',
+         height: 'min(95vh, calc(95vw * 9/16))',
+         aspectRatio: '16/9',
+         containerType: 'size'
+        }}
+       >
+        <div className="absolute inset-0 overflow-y-auto custom-scrollbar">
+         <div id="notification-root"></div>
+         <div id="modal-root"></div>
+
+         <ThemeProvider>
           <SpriteAnimationProvider>
-            <BreakAnimationProvider>
-              <Router>
-                <ScrollProvider>
-                  <AuthProvider>
-                    <NoteModalProvider>
-                      <ModalProvider>
-                        <ProblemProvider>
-                          <Routes>
-                            <Route element={<Layout />}>
-                              <Route path="/user/:username" element={<Dashboard />} />
-                              <Route path='/' element={<Home />} />
-                              <Route path='/shop' element={<PricePage />} />
-                              <Route path='/checkout' element={<CheckoutPage />} />
-                              <Route path='/library' element={<BrowsePage />} />
-                              <Route path='/milestones' element={<MilestonesPage />} />
-                            </Route>
-                            <Route path='/home' element={<Homepage/>}/>
-                            <Route path='/login' element={<Login />} />
-                            <Route path='/getEmail' element={<GetEmail />} />
-                            <Route path='/resetPass' element={<ResetPassword />} />
-                            <Route path='/register' element={<Register />} />
-                          </Routes>
-                        </ProblemProvider>
-                      </ModalProvider>
-                    </NoteModalProvider>
-                  </AuthProvider>
-                </ScrollProvider>
-              </Router>
-            </BreakAnimationProvider>
+           <BreakAnimationProvider>
+            <ScrollProvider>
+             <AuthProvider>
+              <NoteModalProvider>
+               <ModalProvider>
+                <ProblemProvider>
+                 <Routes>
+                  <Route element={<Layout />}>
+                   <Route path='/home' element={<Home />} />
+                   <Route path='/shop' element={<PricePage />} />
+                   <Route path='/checkout' element={<CheckoutPage />} />
+                   <Route path='/library' element={<BrowsePage />} />
+                   <Route path='/milestones' element={<MilestonesPage />} />
+                  </Route>
+                  <Route path='/login' element={<Login />} />
+                  <Route path='/getEmail' element={<GetEmail />} />
+                  <Route path='/resetPass' element={<ResetPassword />} />
+                  <Route path='/register' element={<Register />} />
+                 </Routes>
+                </ProblemProvider>
+               </ModalProvider>
+              </NoteModalProvider>
+             </AuthProvider>
+            </ScrollProvider>
+           </BreakAnimationProvider>
           </SpriteAnimationProvider>
-        </ThemeProvider>
-      </NotificationProvider>
-    </div>
-  )
+         </ThemeProvider>
+        </div>
+       </div>
+      </div>
+     } />
+    </Routes>
+   </Router>
+  </NotificationProvider>
+ )
 }
 
 export default App

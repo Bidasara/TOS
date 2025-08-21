@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @keyframes fadeIn {
   0% { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -7,6 +8,40 @@
   animation: fadeIn 0.2s ease-out forwards;
 }
 
+:root {
+  /* Base scale factor using container dimensions */
+  --scale-factor: 2cqmin;
+  
+  /* Responsive units based on your container */
+  --unit-xs: calc(0.25 * var(--scale-factor));
+  --unit-sm: calc(0.5 * var(--scale-factor));
+  --unit: calc(1 * var(--scale-factor));
+  --unit-lg: calc(1.5 * var(--scale-factor));
+  --unit-xl: calc(2 * var(--scale-factor));
+  --unit-2xl: calc(3 * var(--scale-factor));
+  
+  /* Text scaling */
+  --text-xs: calc(0.75 * var(--scale-factor));
+  --text-sm: calc(0.875 * var(--scale-factor));
+  --text-base: calc(1 * var(--scale-factor));
+  --text-lg: calc(1.125 * var(--scale-factor));
+  --text-xl: calc(1.25 * var(--scale-factor));
+  --text-2xl: calc(1.5 * var(--scale-factor));
+}
+
+/* Custom scrollbar for your container */
+.custom-scrollbar::-webkit-scrollbar {
+  width: calc(0.5 * var(--scale-factor));
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: calc(0.25 * var(--scale-factor));
+}
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -51,14 +86,15 @@
 }
 
 /* Custom Checkbox Styling */
+/* Custom Checkbox Styling */
 input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
-  height: 20px;
-  width: 20px;
+  height: calc(1.55 * var(--unit));
+  width: calc(1.55 * var(--unit));
   background-color: #fff;
   border: 2px solid #d1d5db;
-  border-radius: 4px;
+  border-radius: min(calc(0.25 * var(--unit)), 4px);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -75,7 +111,7 @@ input[type="checkbox"]:checked {
 input[type="checkbox"]:checked::after {
   content: "✓";
   color: white;
-  font-size: 14px;
+  font-size: calc(0.975 * var(--text-base));
   font-weight: bold;
 }
 
@@ -88,6 +124,7 @@ input[type="checkbox"]:checked::after {
   background-color: #6366f1;
   border-color: #6366f1;
 }
+
 
 /* Add some nice transitions */
 .transition-all {
@@ -119,7 +156,6 @@ button:focus, input:focus {
 }
 
 /* Optional: Add a custom font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;

@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 import { useNotification } from './NotificationContext.jsx';
 import { useModal } from './ModalContext.jsx';
 import { useScroll } from './ScrollContext.jsx';
+import { useNoteModal } from './NoteModalContext.jsx';
 
 //==============================================================================
 // CONTEXT CREATION
@@ -26,9 +27,9 @@ export const ProblemProvider = ({ children }) => {
   // External hooks for authentication and notifications
   const { accessToken } = useAuth();
   const { showNotification } = useNotification();
-  const { setModalOpen,query,setQuery } = useModal();
-  const { openCategory, setOpenCategory,
-          setElevatedCategory, setElevatedProblem } = useScroll();
+  const { setModalOpen, query, setQuery } = useModal();
+  const { openCategory, setOpenCategory, setElevatedCategory, setElevatedProblem } = useScroll();
+  const { setNoteModalContent, setNoteModalOpen } = useNoteModal();
 
   //----------------------------------------------------------------------------
   // STATE MANAGEMENT
@@ -201,8 +202,10 @@ export const ProblemProvider = ({ children }) => {
   const getTotalSolved = async () => {
     try {
       const response = await api.get('/data/solvedAndRevised');
-      setTotalSolved(response.data.data.solved);
-      setTotalRevised(response.data.data.revised);
+      const temp = response.data.data
+      setTotalSolved(temp.solved + temp.revised + temp.mastered);
+      setTotalRevised(temp.revised + temp.mastered);
+      console.log(response)
     } catch (err) {
       console.error("Error fetching solved/revised counts:", err);
     }
@@ -296,7 +299,7 @@ export const ProblemProvider = ({ children }) => {
    * Adds a new category to a specified list.
    * @param {string} listId - The _id of the list to add the category to.
    */
-  const addCategory = async (query,listId) => {
+  const addCategory = async (query, listId) => {
     setModalOpen(false);
     try {
       const response = await api.patch('/data/addCategory',
@@ -365,54 +368,71 @@ export const ProblemProvider = ({ children }) => {
    * Adds a problem to a category by its number.
    * @param {object} data - Contains listId and catId.
    */
-  const addProblem = async (query,ids) => {
-    const { listId, catId } = ids;
+  const addProblem = async (query, ids) => {
     const probNum = parseInt(query);
-    console.log(data,":><:",probNum)
 
-    // Prevent adding a duplicate problem to the same category
-    const category = currentList.categories.find(cat => cat._id === catId);
-    if (category?.problems.some(p => p.problemId.num === probNum)) {
-      showNotification('This problem already exists in the current category.', 'error');
-      return;
-    }
+    if (ids) {
+      const { listId, catId } = ids;
+      const category = currentList.categories.find(cat => cat._id === catId);
 
-    setModalOpen(false);
-    try {
-      const response = await api.patch('/data/addProblem', { listId, catId, probNum });
-      const { prob, p_id } = response.data.data;
+      // Prevent adding a duplicate problem to the same category
+      if (category?.problems.some(p => p.problemId.num === probNum)) {
+        showNotification('This problem already exists in the current category.', 'error');
+        setNoteModalOpen(false); // Close the modal on error
+        return;
+      }
 
-      const newProblem = {
-        _id: p_id,
-        solved: false,
-        revised: false,
-        notes: "",
-        problemId: { ...prob }
-      };
+      try {
+        const response = await api.patch('/data/addProblem', { listId, catId, probNum });
+        const { prob, p_id, status } = response.data.data;
 
-      const updatedData = {
-        ...data,
-        lists: data.lists.map(list =>
-          list._id === listId
-            ? {
-              ...list,
-              categories: list.categories.map(cat =>
-                cat._id === catId
-                  ? { ...cat, problems: [...cat.problems, newProblem] }
-                  : cat
-              )
-            }
-            : list
-        )
-      };
+        const newProblem = {
+          _id: p_id,
+          status: status,
+          notes: "",
+          problemId: { ...prob }
+        };
 
-      setData(updatedData);
-      setElevatedProblem(newProblem._id);
-      localStorage.setItem("userData", JSON.stringify(updatedData));
-      showNotification(`Problem number ${probNum} added successfully`, 'success');
-      return true;
-    } catch (err) {
-      console.error("Error adding problem:", err);
+        const updatedData = {
+          ...data,
+          lists: data.lists.map(list =>
+            list._id === listId
+              ? {
+                ...list,
+                categories: list.categories.map(cat =>
+                  cat._id === catId
+                    ? { ...cat, problems: [...cat.problems, newProblem] }
+                    : cat
+                )
+              }
+              : list
+          )
+        };
+
+        setData(updatedData);
+        setElevatedProblem(newProblem._id);
+        localStorage.setItem("userData", JSON.stringify(updatedData));
+        showNotification(`Problem number ${probNum} added successfully`, 'success');
+        return true; // Exit the function after success
+      } catch (err) {
+        console.error("Error adding problem:", err);
+        // You can add an error notification here if needed
+      } finally {
+        // This block will always execute, regardless of success or failure
+        setModalOpen(false);
+      }
+    } else {
+      try {
+        const response = await api.get(`/data/hint?probNum=${query}`);
+        setNoteModalContent({
+          probNum: query,
+          initialText: "",
+          hints: response.data.data
+        });
+        setNoteModalOpen(true);
+      } catch (error) {
+        console.error("Error fetching hint:", error);
+      }
     }
   };
 
@@ -423,27 +443,27 @@ export const ProblemProvider = ({ children }) => {
    * @param {string} problemId - The problem's unique ID in the user's list.
    */
   const deleteProblem = async (listId, categoryId, problemId) => {
-      await api.delete('/data/deleteProblem', {
-        data: { listId, categoryId, problemId },
-      });
+    await api.delete('/data/deleteProblem', {
+      data: { listId, categoryId, problemId },
+    });
 
-      const updatedData = {
-        ...data,
-        lists: data.lists.map(list =>
-          list._id === listId ? {
-            ...list,
-            categories: list.categories.map(cat =>
-              cat._id === categoryId ? {
-                ...cat,
-                problems: cat.problems.filter(p => p._id !== problemId)
-              } : cat
-            )
-          } : list
-        )
-      };
+    const updatedData = {
+      ...data,
+      lists: data.lists.map(list =>
+        list._id === listId ? {
+          ...list,
+          categories: list.categories.map(cat =>
+            cat._id === categoryId ? {
+              ...cat,
+              problems: cat.problems.filter(p => p._id !== problemId)
+            } : cat
+          )
+        } : list
+      )
+    };
 
-      setData(updatedData);
-      localStorage.setItem("userData", JSON.stringify(updatedData));
+    setData(updatedData);
+    localStorage.setItem("userData", JSON.stringify(updatedData));
   };
 
   /**
@@ -454,43 +474,43 @@ export const ProblemProvider = ({ children }) => {
    * @param {string} note - The notes for the problem.
    * @param {boolean} addToRevise - Whether to add to the revision queue.
    */
-  const updateProblemStatus = async (listId, categoryId, problemId, note, addToRevise) => {
+  const updateProblemStatus = async (listId, categoryId, problemId, note, level, probNum) => {
     try {
       const response = await api.patch('/data/submit',
-        { listId, catId: categoryId, probId: problemId, notes: note, addToRevise },
+        { listId, catId: categoryId, probId: problemId, notes: note, levelOfRevision: level, probNum },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
       const newPixels = response.data?.data;
       setPixels(newPixels);
       localStorage.setItem("Pixels", JSON.stringify(newPixels));
+      if (listId) {
+        const updatedData = {
+          ...data,
+          lists: data.lists.map(list =>
+            list._id === listId ? {
+              ...list,
+              categories: list.categories.map(cat =>
+                cat._id === categoryId ? {
+                  ...cat,
+                  problems: cat.problems.map(p =>
+                    p.problemId._id === problemId ? {
+                      ...p,
+                      notes: note,
+                      status: 'solved',
+                    } : p
+                  )
+                } : cat
+              )
+            } : list
+          )
+        };
 
-      const updatedData = {
-        ...data,
-        lists: data.lists.map(list =>
-          list._id === listId ? {
-            ...list,
-            categories: list.categories.map(cat =>
-              cat._id === categoryId ? {
-                ...cat,
-                problems: cat.problems.map(p =>
-                  p._id === problemId ? {
-                    ...p,
-                    solved: true,
-                    notes: note,
-                    revised: addToRevise === false ? true : false,
-                    toRevise: addToRevise ? (new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)) : null
-                  } : p
-                )
-              } : cat
-            )
-          } : list
-        )
-      };
-
-      setData(updatedData);
-      localStorage.setItem("userData", JSON.stringify(updatedData));
+        setData(updatedData);
+        localStorage.setItem("userData", JSON.stringify(updatedData));
+      }
     } catch (err) {
+      showNotification(err.response.data.message, "error")
       console.error("Error updating problem status:", err);
     }
   };
@@ -501,33 +521,18 @@ export const ProblemProvider = ({ children }) => {
    * @param {string} titleCategory - The title of the category.
    * @param {string} probId 
    */
-  const updateProblemRevisedStatus = async (listId, titleCategory, probId) => {
+  const updateProblemRevisedStatus = async (probId) => {
     try {
       const response = await api.patch('/data/markRevised',
-        { listId, titleCategory, probId },
+        { probId },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
+      console.log(response, "Mark Revised Response")
 
-      const newPixels = response.data?.data;
+      const newPixels = response.data?.data?.pixels;
       setPixels(newPixels);
       localStorage.setItem("Pixels", JSON.stringify(newPixels));
-
-      const updatedData = {
-        ...data,
-        lists: data.lists.map(list =>
-          list._id === listId ? {
-            ...list,
-            categories: list.categories.map(category =>
-              category.title === titleCategory ? {
-                ...category,
-                problems: category.problems.map(problem =>
-                  problem._id === probId ? { ...problem, revised: true } : problem
-                )
-              } : category
-            )
-          } : list
-        )
-      };
+      const updatedData = response.data?.data?.result;
       setData(updatedData);
       localStorage.setItem("userData", JSON.stringify(updatedData));
     } catch (error) {

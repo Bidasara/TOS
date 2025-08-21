@@ -15,10 +15,10 @@ export const NoteModalProvider = ({ children }) => {
    * @param {string} problemId 
    * @param {string} updatedNotes 
    */
-    const updateNotes = async (listId, categoryId, problemId, updatedNotes) => {
+    const updateNotes = async ( problemId, updatedNotes) => {
         try {
             await api.patch('/data/updateNotes',
-                { listId, catId: categoryId, probId: problemId, notes: updatedNotes },
+                { probId: problemId, notes: updatedNotes },
                 { headers: { Authorization: `Bearer ${accessToken}` } }
             )
             setNoteModalOpen(false);

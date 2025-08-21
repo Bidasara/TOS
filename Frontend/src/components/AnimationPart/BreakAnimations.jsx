@@ -56,11 +56,11 @@ const BreakAnimation = ({
 };
 
 // Usage example component
-const BreakDemo = ({ pack,scale }) => {
+const BreakDemo = ({ pack, scale }) => {
     const { sprite, frameWidth, frameHeight, frames, fps } = pack.pack.break || {};
     if (!sprite) return null;
     return (
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
             <BreakAnimation
                 delay={pack.pack.break.delay}
                 spriteSheet={sprite}
@@ -73,5 +73,6 @@ const BreakDemo = ({ pack,scale }) => {
         </div>
     );
 };
+
 
 export default BreakDemo;

@@ -1,4 +1,4 @@
-import React,{ useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { useAuth } from "../contexts/AuthContext.jsx";
@@ -112,7 +112,8 @@ const Register = (props) => {
                     "Content-Type": "multipart/form-data"
                 }
             });
-            navigate(`/login?username=${formData.username}`);
+            const note = "Your first-time login requires the password sent to your email. Afterward, use your registered password.";
+            navigate(`/login?username=${formData.username}&note=${encodeURIComponent(note)}`);
         } catch (error) {
             console.log("Error:", error);
             if (error.response?.data?.message) {
@@ -123,105 +124,113 @@ const Register = (props) => {
         }
     }
     return (
-        <div className={`min-h-screen pb-8 flex flex-col items-center justify-baseline transition-all duration-300 ${theme === 'tos' ? 'tos' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text' : 'bg-gray-100 dark:bg-gray-900'}`}>
-            <img title='Tech of Success' src={"https://res.cloudinary.com/harshitbd/image/upload/v1755084646/ReviseCoder_mt5fzc.png"} style={{imageRendering: 'pixelated'}} onClick={() => navigate("/")} className={`m-3 w-35 cursor-pointer ${theme === 'tos' ? 'tos-accent tos-theme-mono' : ''}`} alt="" />
-            <div className={`w-full max-w-md p-8 rounded-xl shadow-lg ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'bg-black border-2 border-cyan-400 neon-text' : 'bg-white dark:bg-gray-800'}`}>
-                <h2 className={`text-2xl font-bold mb-4 text-center ${theme === 'tos' ? 'tos-accent tos-theme-mono' : theme === 'cyberpunk' ? 'text-cyan-400 neon-text' : 'text-gray-800 dark:text-white'}`}>Register</h2>
-                <form>
-                    {error && (
-                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                            {error}
-                        </div>
-                    )}
-                    {/* Avatar Selection Section */}
-                    <div className="mb-4">
-                        <div className="flex justify-center items-center gap-1 sm:gap-2 md:gap-3 flex-nowrap">
-                            {defaultAvatars.map((avatar) => (
-                                <div
-                                    key={avatar.id}
-                                    onClick={() => handleAvatarSelect(avatar)}
-                                    className={`cursor-pointer transition-all duration-200 transform hover:scale-105 flex-shrink-0 ${selectedAvatar?.id === avatar.id
-                                        ? theme === 'tos' ? 'ring-2 tos-border' : 'ring-2 ring-indigo-500 ring-offset-1'
-                                        : theme === 'tos' ? 'ring-1 tos-border hover:tos-accent' : 'ring-1 ring-gray-200 hover:ring-indigo-300'
-                                        } rounded-full p-0.5`}
-                                >
-                                    <img
-                                        src={avatar.src}
-                                        alt={avatar.alt}
-                                        className={`w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full object-cover border ${theme === 'tos' ? 'tos-border' : 'border-white dark:border-gray-700'}`}
-                                    />
-                                </div>
-                            ))}
-                            <div className={`cursor-pointer transition-all duration-200 transform hover:scale-105 flex-shrink-0 rounded-full p-0.5 w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 flex items-center justify-center relative overflow-hidden ${theme === 'tos' ? 'tos-border bg-[#23234a]' : 'ring-1 ring-gray-200 hover:ring-indigo-300 bg-gray-100 dark:bg-gray-700'}`}>
-                                <input
-                                    type="file"
-                                    onChange={handleFileChange}
-                                    className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${theme === 'tos'?'bg-[#23234a]':''} `}
-                                />
-                                {!selectedFileAvatar && (
-                                    <img
-                                        src="/plus.svg"
-                                        alt="Add file"
-                                        className="w-5 h-5 sm:w-6 sm:h-6"
-                                    />
-                                )}
-                                {selectedFileAvatar && (
-                                    <span className="truncate max-w-[80%] text-xs sm:text-sm">
-                                        {selectedFileAvatar.name}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        {(selectedAvatar || selectedFileAvatar) && (
-                            <p className={`text-center text-sm mt-2 ${theme === 'tos' ? 'tos-light tos-theme-mono' : 'text-gray-600 dark:text-gray-400'}`}>
-                                {selectedAvatar ? selectedAvatar.alt : "Custom Avatar"}
-                            </p>
-                        )}
-                    </div>
-                    {(selectedAvatar != null || selectedFileAvatar != null) ? null : <label className={`block text-sm font-medium mb-3 text-center ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`}>
-                        Choose a default avatar
-                    </label>}
+    <div className={`h-full flex flex-col items-center justify-start transition-all duration-300 ${theme === 'tos' ? 'tos' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text' : 'bg-gray-100 dark:bg-gray-900'}`} style={{ padding: 'calc(2 * var(--unit))' }}>
+        <img title='ReviseCoder' src={"https://res.cloudinary.com/harshitbd/image/upload/v1755760194/ReviseCoder-modified_x58b5u.png"} style={{ imageRendering: 'pixelated', width: 'calc(8 * var(--unit))', marginBottom: 'calc(1.5 * var(--unit))' }} onClick={() => navigate("/")} className={`cursor-pointer ${theme === 'tos' ? 'tos-accent tos-theme-mono' : ''}`} alt="" />
+        <div className={`rounded-xl shadow-lg ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'bg-black border-2 border-cyan-400 neon-text' : 'bg-white dark:bg-gray-800'}`} style={{ width: 'calc(20 * var(--unit-lg))', padding: 'calc(2 * var(--unit))' }}>
 
-                    <div className="mb-4">
-                        <label className={`block mb-2 text-sm font-medium ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`} htmlFor="username">Username</label>
-                        <input
-                            type="text"
-                            id="username"
-                            value={formData.username}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            required
-                        />
-                        {!isUsernameValid(formData.username) && (<p className="text-xs dark:text-gray-400 text-gray-500 mt-1">Username must be 3-20 characters long.</p>)}
+            <h2 className={`font-bold text-center ${theme === 'tos' ? 'tos-accent' : theme === 'cyberpunk' ? 'text-cyan-400' : 'text-gray-800'}`} style={{ fontSize: 'calc(1.5 * var(--text-base))', marginBottom: 'calc(1.5 * var(--unit))' }}>Register</h2>
+            <form style={{ display: 'flex', flexDirection: 'column', gap: 'calc(1 * var(--unit))' }}>
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 rounded" style={{ padding: 'calc(0.5 * var(--unit))', fontSize: 'var(--text-sm)' }}>
+                        {error}
                     </div>
-                    <div className="mb-4">
-                        <label className={`block mb-2 text-sm font-medium ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`} htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white" required
-                        />
-                        {!isEmailValid(formData.email) && (<p className="text-xs dark:text-gray-400 text-gray-500 mt-1">Please enter a valid email address.</p>)}
+                )}
+                {/* Avatar Selection Section */}
+                <div>
+                    <div className="flex justify-center items-center flex-nowrap" style={{ gap: 'calc(0.9 * var(--unit))' }}>
+                        {defaultAvatars.map((avatar) => (
+                            <div
+                                key={avatar.id}
+                                onClick={() => handleAvatarSelect(avatar)}
+                                className={`cursor-pointer transition-all duration-200 transform hover:scale-105 flex-shrink-0 ${selectedAvatar?.id === avatar.id
+                                    ? theme === 'tos' ? 'ring-2 tos-border' : 'ring-2 ring-indigo-500 ring-offset-1'
+                                    : theme === 'tos' ? 'ring-1 tos-border hover:tos-accent' : 'ring-1 ring-gray-200 hover:ring-indigo-300'
+                                    } rounded-full`}
+                                style={{ padding: 'calc(0.125 * var(--unit))' }}
+                            >
+                                <img
+                                    src={avatar.src}
+                                    alt={avatar.alt}
+                                    className={`rounded-full object-cover border ${theme === 'tos' ? 'tos-border' : 'border-white dark:border-gray-700'}`}
+                                    style={{ width: 'calc(3 * var(--unit))', height: 'calc(3 * var(--unit))' }}
+                                />
+                            </div>
+                        ))}
+                        <div className={`cursor-pointer transition-all duration-200 transform hover:scale-105 flex-shrink-0 rounded-full flex items-center justify-center relative overflow-hidden ${theme === 'tos' ? 'tos-border bg-[#23234a]' : 'ring-1 ring-gray-200 hover:ring-indigo-300 bg-gray-100 dark:bg-gray-700'}`} style={{ padding: 'calc(0.125 * var(--unit))', width: 'calc(3 * var(--unit))', height: 'calc(3 * var(--unit))' }}>
+                            <input
+                                type="file"
+                                onChange={handleFileChange}
+                                className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${theme === 'tos' ? 'bg-[#23234a]' : ''} `}
+                            />
+                            {!selectedFileAvatar && (
+                                <img
+                                    src="/plus.svg"
+                                    alt="Add file"
+                                    style={{ width: 'calc(1.5 * var(--unit))', height: 'calc(1.5 * var(--unit))' }}
+                                />
+                            )}
+                            {selectedFileAvatar && (
+                                <span className="truncate max-w-[80%]" style={{ fontSize: 'var(--text-xs)' }}>
+                                    {selectedFileAvatar.name}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <div className="mb-6">
-                        <label className={`block mb-2 text-sm font-medium ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`} htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            required
-                        />
-                        {!isPasswordValid(formData.password) && (<p className="text-xs dark:text-gray-400 text-gray-500 mt-1">Password must be 8-24 characters long.</p>)}
-                    </div>
-                    <button type="submit" className={`w-full text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 ${isFormValid ? 'bg-indigo-600 hover:bg-indigo-700' : 'opacity-50 cursor-not-allowed bg-gray-500'}`} onClick={sendRegisterReq}>Register</button>
-                </form>
-            </div>
+                    {(selectedAvatar || selectedFileAvatar) && (
+                        <p className={`text-center ${theme === 'tos' ? 'tos-light tos-theme-mono' : 'text-gray-600 dark:text-gray-400'}`} style={{ fontSize: 'var(--text-sm)', marginTop: 'calc(0.5 * var(--unit))' }}>
+                            {selectedAvatar ? selectedAvatar.alt : "Custom Avatar"}
+                        </p>
+                    )}
+                </div>
+                {(selectedAvatar != null || selectedFileAvatar != null) ? null : <label className={`block font-medium text-center ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`} style={{ fontSize: 'var(--text-sm)' }}>
+                    Choose a default avatar
+                </label>}
+
+                <div>
+                    <label className={`block font-medium ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`} style={{ fontSize: 'var(--text-base)', marginBottom: 'calc(0.25 * var(--unit))' }} htmlFor="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        style={{ padding: 'calc(0.5 * var(--unit))', fontSize: 'var(--text-base)' }}
+                        required
+                    />
+                    {!isUsernameValid(formData.username) && (<p className="dark:text-gray-400 text-gray-500" style={{ fontSize: 'var(--text-xs)', marginTop: 'calc(0.25 * var(--unit))' }}>Username must be 3-20 characters long.</p>)}
+                </div>
+                <div>
+                    <label className={`block font-medium ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`} style={{ fontSize: 'var(--text-base)', marginBottom: 'calc(0.25 * var(--unit))' }} htmlFor="email">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        style={{ padding: 'calc(0.5 * var(--unit))', fontSize: 'var(--text-base)' }}
+                        required
+                    />
+                    {!isEmailValid(formData.email) && (<p className="dark:text-gray-400 text-gray-500" style={{ fontSize: 'var(--text-xs)', marginTop: 'calc(0.25 * var(--unit))' }}>Please enter a valid email address.</p>)}
+                </div>
+                <div>
+                    <label className={`block font-medium ${theme === 'tos' ? 'tos-accent tos-theme-mono' : 'text-gray-700 dark:text-gray-200'}`} style={{ fontSize: 'var(--text-base)', marginBottom: 'calc(0.25 * var(--unit))' }} htmlFor="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        style={{ padding: 'calc(0.5 * var(--unit))', fontSize: 'var(--text-base)' }}
+                        required
+                    />
+                    {!isPasswordValid(formData.password) && (<p className="dark:text-gray-400 text-gray-500" style={{ fontSize: 'var(--text-xs)', marginTop: 'calc(0.25 * var(--unit))' }}>Password must be 8-24 characters long.</p>)}
+                </div>
+                <button type="submit" className={`w-full font-semibold rounded-lg transition-colors duration-200 ${isFormValid ? 'bg-indigo-600 hover:bg-indigo-700' : 'opacity-50 cursor-not-allowed bg-gray-500'}`} style={{ padding: 'calc(0.5 * var(--unit))', fontSize: 'calc(1.125 * var(--text-base))' }} onClick={sendRegisterReq}>Register</button>
+            </form>
         </div>
-    );
+    </div>
+);
+
 }
 
 export default React.memo(Register);

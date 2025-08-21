@@ -16,10 +16,11 @@ router.delete('/deleteCategory', dataController.deleteCategory);
 router.patch('/addProblem', dataController.addProblemForCategory);
 router.delete('/deleteProblem', dataController.deleteProblem);
 router.patch('/markRevised', dataController.markRevisedProblem);
-router.get('/getNotes', dataController.getNotesByUserListCategoryProblem);
+router.get('/getNotes', dataController.getNotesByUserProblem);
 router.patch('/submit', dataController.markSolvedWithNotes);
 router.patch('/updateNotes', dataController.updateNotes);
 router.get('/reviseList', dataController.getReviseListByUserId);
 router.get('/solvedAndRevised',dataController.getSolvedAndRevised)
+router.get('/hint',dataController.getHint);
 
 export default router; 

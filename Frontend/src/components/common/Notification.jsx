@@ -14,19 +14,26 @@ const NotificationPortal = ({ notification, isVisible }) => {
 
   const visibleClasses = isVisible
     ? 'opacity-100 transform-none'
-    : 'opacity-0';
+    : 'opacity-100';
 
   const notificationContent = (
     <div
-      className={`fixed ${positionClass} left-1/2 transform -translate-x-1/2
-                  w-11/12 max-w-sm p-4 rounded-lg shadow-xl z-[9999] 
-                  text-white text-center border-2 ${colorClass}
-                  transition-all duration-500 ease-in-out
-                  ${visibleClasses}`}
+      className={`absolute ${positionClass} left-1/2 transform -translate-x-1/2
+            rounded-lg shadow-xl z-[9999] 
+            text-white text-center border-2 ${colorClass}
+            transition-all duration-500 ease-in-out
+            ${visibleClasses}`}
+      style={{
+        padding: 'calc(1 * var(--unit))',
+        width: 'calc(22 * var(--unit))',
+        maxWidth: 'calc(28 * var(--unit))',
+        bottom: type === 'success' ? 'calc(1 * var(--unit))' : 'auto',
+        top: type === 'error' ? 'calc(1 * var(--unit))' : 'auto'
+      }}
       role="alert"
       aria-live="assertive"
     >
-      <p className="font-semibold">{message}</p>
+      <p className="font-semibold" style={{ fontSize: 'var(--text-base)' }}>{message}</p>
     </div>
   );
 

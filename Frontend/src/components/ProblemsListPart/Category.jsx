@@ -8,16 +8,16 @@ import { useModal } from '../../contexts/ModalContext.jsx';
 
 const Category = ({ handleClick, item: category, elevate: elevatedCategory, open: openCategory }) => {
     const { currentList, deleteCategory, data } = useProblemContext();
-    const {setFunc,setModalTitle,setModalExtra,setModalOpen,setInputId,setInputLabel,setInputPlaceHolder,setInputType } = useModal();
-    const {elevatedProblem, setElevatedProblem} = useScroll();
-    const handleAdd = () =>{
+    const { setFunc, setModalTitle, setModalExtra, setModalOpen, setInputId, setInputLabel, setInputPlaceHolder, setInputType } = useModal();
+    const { elevatedProblem, setElevatedProblem } = useScroll();
+    const handleAdd = () => {
         setModalTitle("Add Problem");
         setFunc("problem");
-        setInputLabel("Problem Number");
+        setInputLabel("Problem Name or Number");
         setInputId("Problem");
-        setInputPlaceHolder("number of the problem")
+        setInputPlaceHolder("name or number of the problem")
         setInputType("number")
-        setModalExtra({listId:currentList._id,catId:openCategory});
+        setModalExtra({ listId: currentList._id, catId: openCategory });
         setModalOpen(true);
     }
     const { theme } = useTheme()
@@ -37,49 +37,62 @@ const Category = ({ handleClick, item: category, elevate: elevatedCategory, open
     return (
         <>
             <div
-            onClick={()=>handleClick(category)}
-                className={`px-4 rounded-lg cursor-pointer ${(openCategory && openCategory != "") ? "h-1/5" : "h-full"} font-medium flex justify-between items-center transition-all duration-200 shadow-sm
-                ${theme === 'cyberpunk'
+                onClick={() => handleClick(category)}
+                className={`cursor-pointer ${(openCategory && openCategory != "") ? "h-1/5" : "h-full"} flex justify-between items-center transition-all duration-200
+            ${theme === 'cyberpunk'
                         ? `${elevatedCategory && category._id === elevatedCategory
                             ? 'bg-black bg-opacity-80  border-2 border-cyan-400 neon-text text-cyan-400'
                             : 'bg-black bg-opacity-60  border border-cyan-700 neon-text text-cyan-300 opacity-70'}
-                        hover:bg-black hover:bg-opacity-80`
+                    hover:bg-black hover:bg-opacity-80`
                         : `${elevatedCategory && category._id === elevatedCategory
                             ? 'bg-gray-50 dark:bg-gray-800  shadow-xl'
                             : 'bg-gray-200 dark:bg-gray-700/50  opacity-70'}
-                            hover:bg-gray-100 text-gray-700 dark:hover:bg-gray-700 dark:text-gray-300`
+                        hover:bg-gray-100 text-gray-700 dark:hover:bg-gray-700 dark:text-gray-300`
                     }`}
+                style={{
+                    padding: 'calc(1 * var(--unit))',
+                    borderRadius: `min(calc(0.5 * var(--unit)), 8px)`
+                }}
             >
                 {/* delete icon */}
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span onClick={(event) => handleDelete(currentList._id, category._id, event)} className="material-symbols-outlined delete-icon">
+                <div className="flex items-center flex-1 min-w-0" style={{ gap: 'calc(0.5 * var(--unit))' }}>
+                    <span onClick={(event) => handleDelete(currentList._id, category._id, event)} className="material-symbols-outlined delete-icon" style={{ fontSize: 'calc(1.8*var(--text-base))' }}>
                         delete
                     </span>
-                    <span className={`text-sm truncate ${theme === 'cyberpunk' ? 'text-cyan-300 neon-text' : ''}`}>{category.title}</span>
-                    <span className={`ml-2 text-xs font-medium px-2 py-0.5 rounded-md ${theme === 'cyberpunk' ? 'bg-black border border-cyan-400 text-cyan-400' : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300'} shrink-0`}>
+
+                    <span className={`truncate ${theme === 'cyberpunk' ? 'text-cyan-300 neon-text' : ''}`} style={{ fontSize: 'calc(1.3*var(--text-sm))' }}>{category.title}</span>
+                    <span className={`font-medium rounded-md ${theme === 'cyberpunk' ? 'bg-black border border-cyan-400 text-cyan-400' : 'bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300'} shrink-0`} style={{
+                        marginLeft: 'calc(0.5 * var(--unit))',
+                        fontSize: 'var(--text-xs)',
+                        padding: 'calc(0.125 * var(--unit)) calc(0.5 * var(--unit))',
+                        borderRadius: `min(calc(0.25 * var(--unit)), 6px)`
+                    }}
+                    >
                         {category.problems.length}
                     </span>
                 </div>
             </div>
             {(openCategory && openCategory != "") && (
                 <>
-                <div className='h-4/5'>
-                    <Scroll
-                        items={data.lists?.find(list => list._id === currentList._id)?.categories?.find(cat => cat._id === openCategory)?.problems}
-                        renderItem={Problem}
-                        height={"h-2/5"}
-                        heightForProblem={"h-10/12"}
-                        elevatedProblem={elevatedProblem}
-                        setElevatedProblem={setElevatedProblem}
-                    />
-                    <button onClick={handleAdd} className='w-full cursor-pointer h-2/12 rounded-xl text-black bg-amber-300'>
-                        Add New Problem
-                    </button>
-                </div>
+                    <div className='h-4/5'>
+                        <Scroll
+                            items={data.lists?.find(list => list._id === currentList._id)?.categories?.find(cat => cat._id === openCategory)?.problems}
+                            renderItem={Problem}
+                            height={"h-2/5"}
+                            heightForProblem={"h-10/12"}
+                            elevatedProblem={elevatedProblem}
+                            setElevatedProblem={setElevatedProblem}
+                        />
+                        <button onClick={handleAdd} className='w-full cursor-pointer h-2/12 text-black bg-amber-300' style={{ fontSize: 'var(--text-base)', borderRadius: `min(calc(0.75 * var(--unit)), 12px)` }}>
+
+                            Add New Problem
+                        </button>
+                    </div>
                 </>
             )}
         </>
     )
+
 }
 
 export default Category

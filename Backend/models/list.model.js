@@ -17,18 +17,14 @@ const listSchema = new mongoose.Schema({
             trim: true
         },
         problems: [{
-            problemId: {type: mongoose.Schema.Types.ObjectId, ref: 'Problem', required: true},
-            solved: {
-                type: Boolean,
-                default: false
+            problemId: {
+                type: mongoose.Schema.Types.ObjectId, ref: 'Problem', 
+                required: true
             },
-            toRevise: {
-                type: Date,
-                default: null
-            },
-            revised: {
-                type: Boolean,
-                default: false
+            status: {
+                type: String,
+                enum: ['solved', 'revising', 'mastered','unsolved'],
+                default: 'unsolved'
             },
             notes: {
                 type: String,

@@ -165,46 +165,47 @@ const Animation = () => {
   // --- Render based on loading/error states ---
   if (loading) {
     return (
-      <div className={`w-1/4 h-[calc(100% - 8px)] m-2 rounded-xl p-4 shadow-lg flex items-center justify-center
-      ${theme === 'tos' ? 'tos tos-border text-gray-800' :
+      <div className={`w-1/4 h-full rounded-xl shadow-lg flex items-center justify-center
+    ${theme === 'tos' ? 'tos tos-border text-gray-800' :
           theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' :
             'bg-gray-300 dark:bg-gray-800 text-gray-900'
-        }`}>
-
-        {/* Use the new GlitchyLoader component */}
+        }`} style={{ margin: 'calc(0.5 * var(--unit))', padding: 'calc(1 * var(--unit))' }}>
         <GlitchyLoader />
-
       </div>
     );
   }
+
 
   // If found an error during fetching animations
   if (error) {
     return (
-      <div className={`w-1/4 h-[calc(100% - 8px)] m-2 rounded-xl p-4 shadow-lg flex items-center justify-center text-red-500
-        ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'}`}>
-        <p>{error}</p>
+      <div className={`w-1/4 h-full rounded-xl shadow-lg flex items-center justify-center text-red-500
+      ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'}`} style={{ margin: 'calc(0.5 * var(--unit))', padding: 'calc(1 * var(--unit))' }}>
+        <p style={{ fontSize: 'var(--text-base)' }}>{error}</p>
       </div>
     );
   }
+
 
   // If no animation packs are found after loading
   if (!animationPacks || animationPacks.length === 0) {
     return (
-      <div className={`w-1/4 h-[calc(100% - 8px)] m-2 rounded-xl p-4 shadow-lg flex items-center justify-center
-        ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'}`}>
-        <p>No animations available.</p>
+      <div className={`w-1/4 h-full rounded-xl shadow-lg flex items-center justify-center
+      ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'}`} style={{ margin: 'calc(0.5 * var(--unit))', padding: 'calc(1 * var(--unit))' }}>
+        <p style={{ fontSize: 'var(--text-base)' }}>No animations available.</p>
       </div>
     );
   }
 
+
   // Render SpriteDemo only when animationPacks is loaded and not empty
   return (
-    <div className={` h-full w-1/4 rounded-xl transition-all duration-300
-      ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'} ${loop ? 'z-1' : 'z-50'}`}>
+    <div className={`h-full w-1/4 rounded-xl transition-all duration-300
+    ${theme === 'tos' ? 'tos tos-border' : theme === 'cyberpunk' ? 'cyberpunk-bg neon-text border-2 border-cyan-400' : 'bg-gray-300 dark:bg-gray-800'} ${loop ? 'z-1' : 'z-50'}`}>
       <SpriteDemo loop={loop} pack={animationPacks} />
     </div>
   );
+
 };
 
 export default React.memo(Animation);

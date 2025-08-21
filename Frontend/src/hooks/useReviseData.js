@@ -18,6 +18,7 @@ export const useReviseData = (viewMode) => {
                 headers: { Authorization: `Bearer ${accessToken}` }
             });
             const newData = response.data.data || [];
+            console.log(response)
             setReviseData(newData);
             return newData;
         } catch (err) {

@@ -67,14 +67,14 @@ const MilestonesPage = () => {
 
     return (
         <div className="milestones-page flex flex-col items-end">
-            <div className="pixel-counter sticky top-4 z-50">
-                <span role="img" aria-label="pixel-coin">{pixels}💠</span>
+            <div className="pixel-counter sticky z-30" style={{ top: 'calc(1 * var(--unit))' }}>
+                <span role="img" aria-label="pixel-coin" style={{ fontSize: 'var(--text-lg)' }}>{pixels}💠</span>
             </div>
-            <header className="milestones-header w-full ">
-                <h1>Milestones</h1>
+            <header className="milestones-header w-full">
+                <h1 style={{ fontSize: 'var(--text-2xl)', padding: 'calc(1 * var(--unit))' }}>Milestones</h1>
             </header>
 
-            <main className="flex flex-col gap-3 w-full">
+            <main className="flex flex-col w-full" style={{ gap: 'calc(0.75 * var(--unit))' }}>
                 {milestones.map((milestone) => (
                     !milestonesDone?.includes(milestone._id)? (
                         <MilestoneCard

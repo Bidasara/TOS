@@ -93,7 +93,15 @@ const userSchema = new Schema({
     verificationCode: {
         type: String,
         default: null
-    }
+    },
+    todayPointLimit: {
+        type: Number,
+        default: 30,
+    },
+    todayPoints: {
+        type: Number,
+        default: 0,
+    },
 },{
     timestamps: true
 });
