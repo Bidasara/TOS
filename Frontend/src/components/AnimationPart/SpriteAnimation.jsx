@@ -65,7 +65,7 @@ const SpriteAnimation = ({
 
 import { useSpriteAnimation } from '../../contexts/SpriteAnimationContext.jsx';
 
-const SpriteDemo = ({ move = null, pack = null, scale: scaleTo, loop = true, backTo }) => {
+const SpriteDemo = ({ move = null, pack = null,height, scale: scaleTo, loop = true, backTo }) => {
   const { currentAnimation, setCurrentAnimation, currCharacter, setCurrCharacter, backToIdle } = useSpriteAnimation();
 
   const characterChosen = (pack != null && pack.length === 1) ? pack[0].title : currCharacter;
@@ -87,7 +87,7 @@ const SpriteDemo = ({ move = null, pack = null, scale: scaleTo, loop = true, bac
   return (
     <div className='flex flex-col justify-between h-full' style={{ gap: 'calc(1 * var(--unit))', padding: `calc(0.75 * var(--unit)) calc(0.5 * var(--unit))` }}>
 
-      <div className='h-8/12 relative'>
+      <div className={`relative ${height ? height:"h-8/12"}`}>
         {sprite && (
           <SpriteAnimation
             spriteSheet={sprite}

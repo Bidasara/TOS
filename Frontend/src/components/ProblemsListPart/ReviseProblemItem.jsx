@@ -21,14 +21,14 @@ const ReviseProblemItem = ({
             onClick={() => handleClick(prob)}
             className={`bg-white z-50 shadow-md border border-indigo-200 transition-all duration-300 hover:border-indigo-400 flex flex-nowrap items-center justify-between overflow-hidden`}
             style={{
-                height: `calc(${currentPack.pack.break.frameHeight * scale / 16} * var(--unit))`,
+                height: `calc(${currentPack.pack.break.frameHeight * 1.43} * var(--unit-xs))`,
                 opacity: isHiding ? 0 : 1,
                 padding: 'calc(1 * var(--unit))',
                 borderRadius: `calc(1 * var(--unit))`
             }}
         >
             {isAnimating ? (
-                <BreakDemo scale={scale} pack={currentPack} />
+                <BreakDemo scale={6} pack={currentPack} />
             ) : (
                 <>
                     <div className="flex-1 min-w-0">

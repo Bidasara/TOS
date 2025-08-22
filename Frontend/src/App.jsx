@@ -21,6 +21,7 @@ import { NoteModalProvider } from './contexts/NoteModalContext.jsx'
 import { ModalProvider } from './contexts/ModalContext.jsx'
 import { ScrollProvider } from './contexts/ScrollContext.jsx'
 import Homepage from './pages/HomePage.jsx'
+import RotateDeviceOverlay from './components/common/RotateDeviceOverlay.jsx'
 
 function App() {
  return (
@@ -29,7 +30,7 @@ function App() {
     <Routes>
      <Route path='/' element={<Homepage />} />
      <Route path="/user/:username" element={
-      <ThemeProvider>
+         <ThemeProvider>
        <SpriteAnimationProvider>
         <BreakAnimationProvider>
          <ScrollProvider>
@@ -48,7 +49,8 @@ function App() {
       </ThemeProvider>
      } />
      <Route path="/*" element={
-      <div className="min-h-screen w-full grid place-items-center bg-zinc-900 p-4">
+         <div className="min-h-screen w-full grid place-items-center bg-zinc-900 p-4">
+             <RotateDeviceOverlay/>
        <div
         className="relative overflow-hidden rounded-lg shadow-2xl bg-white"
         style={{

@@ -66,9 +66,9 @@ const MilestonesPage = () => {
     // which would update the state and make an API call.
 
     return (
-        <div className="milestones-page flex flex-col items-end">
-            <div className="pixel-counter sticky z-30" style={{ top: 'calc(1 * var(--unit))' }}>
-                <span role="img" aria-label="pixel-coin" style={{ fontSize: 'var(--text-lg)' }}>{pixels}💠</span>
+        <div className="milestones-page flex flex-col items-end overflow-y-auto" style={{padding:'calc(1 * var(--unit))'}}>
+            <div className="pixel-counter sticky z-30" style={{ top: 'calc(2 * var(--unit-xs))' }}>
+                <span role="img" aria-label="pixel-coin" style={{ fontSize: 'calc(1.5*var(--text-sm))' }}>{pixels}💠</span>
             </div>
             <header className="milestones-header w-full">
                 <h1 style={{ fontSize: 'var(--text-2xl)', padding: 'calc(1 * var(--unit))' }}>Milestones</h1>

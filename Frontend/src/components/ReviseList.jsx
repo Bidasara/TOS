@@ -6,6 +6,7 @@ import Scroll from './common/Scroll.jsx';
 import ReviseProblemItem from './ProblemsListPart/ReviseProblemItem.jsx'
 import { useNoteModal } from '../contexts/NoteModalContext.jsx';
 import { useModal } from '../contexts/ModalContext.jsx';
+import api from '../api.js';
 
 const ReviseList = ({ viewMode, parentRef }) => {
     const { currCharacter, triggerAttack } = useSpriteAnimation();
@@ -103,7 +104,7 @@ const ReviseList = ({ viewMode, parentRef }) => {
             <div className="relative h-full min-h-0 overflow-y-auto" style={{ paddingRight: 'calc(0.5 * var(--unit))' }}>
                 <Scroll
                     items={reviseData}
-                    width={currentPack.pack.break.frameWidth * scale}
+                    width={currentPack.pack.break.frameWidth * 1.5}
 
                     renderItem={({ item, handleClick }) => (
                         <ReviseProblemItem

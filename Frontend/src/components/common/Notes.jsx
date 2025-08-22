@@ -19,7 +19,7 @@ const NoteModal = () => {
   const { theme } = useTheme();
   const { updateProblemStatus } = useProblemContext();
   const { noteModalContent, noteModalOpen, setNoteModalOpen, updateNotes } = useNoteModal();
-  const [hints, setHints] = useState([]);
+  const [ hints, setHints ] = useState([]);
   const [noteText, setNoteText] = useState('');
   const { refetch } = useReviseData("lists");
 

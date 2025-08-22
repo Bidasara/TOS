@@ -215,7 +215,7 @@ const Scroll = ({ items, renderItem: ItemComponent, height, width, openCategory:
                                 paddingTop: 'calc(0.375 * var(--unit))',
                                 paddingBottom: 'calc(0.375 * var(--unit))',
                                 ...(width ? {
-                                    width: elevate === item._id ? `calc(${width / 16} * var(--unit))` : `calc(${(width - 70) / 16} * var(--unit))`
+                                    width: elevate === item._id ? `calc(${width} * var(--unit-xs))` : `calc(${(width - 17)} * var(--unit-xs))`
                                 } : {})
                             }}
                         >
